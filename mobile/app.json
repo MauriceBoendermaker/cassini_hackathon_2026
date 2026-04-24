@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "Flood Evacuation",
+    "slug": "flood-evacuation",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0f172a",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.hackathon.floodevac"
+    },
+    "android": {
+      "package": "com.hackathon.floodevac",
+      "adaptiveIcon": {
+        "backgroundColor": "#0f172a"
+      }
+    }
+  }
+}
