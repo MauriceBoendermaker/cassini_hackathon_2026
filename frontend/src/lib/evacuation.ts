@@ -1,5 +1,6 @@
 import type { LatLng, Waterway } from "./overpass";
 import { fetchElevations } from "./elevation";
+import { fetchWalkingMatrix, fetchWalkingRoute, type Route } from "./osrm";
 
 export type FloodClass = "none" | "small" | "medium" | "large";
 
@@ -12,13 +13,23 @@ export type FloodAssessment = {
   distanceToWaterMeters?: number;
 };
 
+export type ScoreBreakdown = {
+  elevationFactor: number; // 1.0 at min gain, saturates at 3.0
+  waterSafetyFactor: number; // 0..1 = distWater / searchRadius
+  reachabilityFactor: number; // 0..1 = 1 / (1 + walkMin/6)
+};
+
 export type Candidate = {
   position: LatLng;
   elevationMeters: number;
   elevationGainMeters: number;
-  distanceToUserMeters: number;
+  distanceToUserMeters: number; // straight-line (kept for reference)
+  routedDistanceMeters: number | null; // walking distance via roads
+  routedDurationSeconds: number | null; // walking time via roads
   distanceToWaterMeters: number;
-  crossesWater: boolean;
+  crossesWater: boolean; // whether the actual walking route crosses a waterway
+  route: Route | null; // full path geometry (populated only for top candidates)
+  scoreBreakdown: ScoreBreakdown | null;
   score: number;
 };
 
@@ -59,10 +70,12 @@ function segmentsIntersect(a: LatLng, b: LatLng, c: LatLng, d: LatLng): boolean 
   return ccw(a, c, d) !== ccw(b, c, d) && ccw(a, b, c) !== ccw(a, b, d);
 }
 
-function lineCrossesWaterway(from: LatLng, to: LatLng, ways: Waterway[]): boolean {
-  for (const w of ways) {
-    for (let i = 0; i < w.geometry.length - 1; i++) {
-      if (segmentsIntersect(from, to, w.geometry[i], w.geometry[i + 1])) return true;
+function pathCrossesWaterway(path: LatLng[], ways: Waterway[]): boolean {
+  for (let i = 0; i < path.length - 1; i++) {
+    for (const w of ways) {
+      for (let j = 0; j < w.geometry.length - 1; j++) {
+        if (segmentsIntersect(path[i], path[i + 1], w.geometry[j], w.geometry[j + 1])) return true;
+      }
     }
   }
   return false;
@@ -173,8 +186,12 @@ export async function planEvacuation(
   }
 
   const candidatePts = generateCandidates(user, assessment.searchRadiusMeters);
-  const elevInputs = [user, assessment.nearestWaterPoint!, ...candidatePts];
-  const elevs = await fetchElevations(elevInputs);
+
+  // Elevations + OSRM walking matrix in parallel: one network round trip each.
+  const [elevs, matrix] = await Promise.all([
+    fetchElevations([user, assessment.nearestWaterPoint!, ...candidatePts]),
+    fetchWalkingMatrix(user, candidatePts),
+  ]);
   const userElev = elevs[0];
   const waterElev = elevs[1];
   const candElevs = elevs.slice(2);
@@ -182,29 +199,38 @@ export async function planEvacuation(
   const candidates: Candidate[] = candidatePts.map((pos, i) => {
     const elev = candElevs[i];
     const gain = elev - waterElev;
-    const distUser = distanceMeters(user, pos);
+    const straightDist = distanceMeters(user, pos);
+    const routed = matrix[i];
     const distWater = nearestWaterDist(pos, ways);
-    const crosses = lineCrossesWaterway(user, pos, ways);
 
-    // Scoring: need elevation above flood + distance from water + reachable quickly.
-    // Hard-fail if below min gain.
+    // Scoring: elevation above flood + distance from water + walking time from user.
+    // Candidates unreachable on foot (routed == null) get score 0.
     let score = 0;
-    if (gain >= assessment.minElevationGainMeters) {
-      const elevScore =
-        1 + Math.min((gain - assessment.minElevationGainMeters) / assessment.minElevationGainMeters, 2);
-      const waterSafety = Math.min(distWater / assessment.searchRadiusMeters, 1);
-      const reachability = 1 / (1 + distUser / 500); // 500m ≈ ~6min walk baseline
-      const crossPenalty = crosses ? 0.25 : 1;
-      score = elevScore * waterSafety * reachability * crossPenalty;
+    let scoreBreakdown: ScoreBreakdown | null = null;
+    if (gain >= assessment.minElevationGainMeters && routed != null) {
+      const elevationFactor =
+        1 + Math.min(
+          (gain - assessment.minElevationGainMeters) / assessment.minElevationGainMeters,
+          2,
+        );
+      const waterSafetyFactor = Math.min(distWater / assessment.searchRadiusMeters, 1);
+      // 6min baseline: every additional 6min halves the contribution.
+      const reachabilityFactor = 1 / (1 + routed.durationSeconds / 360);
+      score = elevationFactor * waterSafetyFactor * reachabilityFactor;
+      scoreBreakdown = { elevationFactor, waterSafetyFactor, reachabilityFactor };
     }
 
     return {
       position: pos,
       elevationMeters: elev,
       elevationGainMeters: gain,
-      distanceToUserMeters: distUser,
+      distanceToUserMeters: straightDist,
+      routedDistanceMeters: routed?.distanceMeters ?? null,
+      routedDurationSeconds: routed?.durationSeconds ?? null,
       distanceToWaterMeters: distWater,
-      crossesWater: crosses,
+      crossesWater: false,
+      route: null,
+      scoreBreakdown,
       score,
     };
   });
@@ -213,6 +239,16 @@ export async function planEvacuation(
     .filter((c) => c.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, 3);
+
+  // Fetch full route geometry for the top candidates so we can draw the path
+  // on the map and warn if it still crosses the flooding waterway (e.g. via a bridge).
+  const routes = await Promise.all(
+    topCandidates.map((c) => fetchWalkingRoute(user, c.position).catch(() => null)),
+  );
+  topCandidates.forEach((c, i) => {
+    c.route = routes[i];
+    if (c.route) c.crossesWater = pathCrossesWaterway(c.route.geometry, ways);
+  });
 
   return {
     assessment,

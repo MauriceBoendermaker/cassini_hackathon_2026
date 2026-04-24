@@ -100,9 +100,24 @@ export default function App() {
                     </div>
                     <div className="meta">
                       {c.elevationMeters.toFixed(1)}m elev · +{c.elevationGainMeters.toFixed(1)}m gain
-                      · {(c.distanceToUserMeters / 1000).toFixed(2)}km away
-                      {c.crossesWater && " · ⚠ crosses water"}
+                      {c.routedDistanceMeters != null && c.routedDurationSeconds != null
+                        ? ` · ${(c.routedDistanceMeters / 1000).toFixed(2)}km walk · ${Math.round(
+                            c.routedDurationSeconds / 60,
+                          )} min`
+                        : ` · ${(c.distanceToUserMeters / 1000).toFixed(2)}km straight`}
+                      {c.crossesWater && " · ⚠ route crosses water"}
                     </div>
+                    {c.scoreBreakdown && (
+                      <div className="formula">
+                        elev <b>{c.scoreBreakdown.elevationFactor.toFixed(2)}</b>
+                        {" × "}
+                        safety <b>{c.scoreBreakdown.waterSafetyFactor.toFixed(2)}</b>
+                        {" × "}
+                        reach <b>{c.scoreBreakdown.reachabilityFactor.toFixed(2)}</b>
+                        {" = "}
+                        <b style={{ color: "#10b981" }}>{c.score.toFixed(2)}</b>
+                      </div>
+                    )}
                   </div>
                 ))}
               </>
@@ -117,11 +132,60 @@ export default function App() {
           </>
         )}
 
+        <details className="score-details">
+          <summary>How the score works</summary>
+          <div className="score-explainer">
+          <div className="formula-hero">
+            score = elevation × waterSafety × reachability
+          </div>
+          <p>
+            <b>elevation</b> <span className="range">1.0–3.0</span>
+            <br />
+            how far above water level, relative to the minimum gain required for this flood class.
+            1.0 at min gain, saturates at 3.0 when the point is 3× higher than required.
+          </p>
+          <p>
+            <b>waterSafety</b> <span className="range">0–1</span>
+            <br />
+            distance from the waterway as a fraction of the search radius. Hits 1.0 at the edge of
+            the search area; 0 right next to the water.
+          </p>
+          <p>
+            <b>reachability</b> <span className="range">0–1</span>
+            <br />
+            <code>1 / (1 + walkMinutes/6)</code> — 6 min walk = 0.5, 12 min = 0.33, 18 min = 0.25.
+            <br />
+            <span style={{ color: "#64748b", fontSize: 11 }}>
+              Walking time is estimated from the routed road distance at 5 km/h
+              (1.4 m/s), the standard adult pace — we don't assume access to a car.
+            </span>
+          </p>
+          <p className="zero-note">
+            Candidates below the minimum elevation gain or with no walking route score <b>0</b>.
+          </p>
+          <table className="thresholds">
+            <thead>
+              <tr>
+                <th>Flood class</th>
+                <th>Radius</th>
+                <th>Min gain</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>small (stream)</td><td>500 m</td><td>+2 m</td></tr>
+              <tr><td>medium (river &lt; 20m)</td><td>1500 m</td><td>+5 m</td></tr>
+              <tr><td>large (river ≥ 20m)</td><td>4000 m</td><td>+15 m</td></tr>
+            </tbody>
+          </table>
+          </div>
+        </details>
+
         <h2>Legend</h2>
         <p>🔵 Rivers · 🟦 Canals · 🩵 Streams</p>
-        <p>🟢 Best evac point · 🔷 Runner-ups · · · Dashed line = recommended route</p>
+        <p>🟢 Best evac point · 🔷 Runner-ups</p>
+        <p>━━ Best walking route · - - - Runner-up routes</p>
         <p style={{ color: "#64748b", fontSize: 11, marginTop: 20 }}>
-          Data: OpenStreetMap (Overpass), Open-Meteo elevation (ETOPO1/Copernicus DEM).
+          Data: OpenStreetMap (Overpass), Open-Meteo elevation (Copernicus DEM), OSRM pedestrian routing.
         </p>
       </div>
     </div>

@@ -83,6 +83,119 @@
   font-style: italic;
 }
 
+.formula {
+  font-family: ui-monospace, "SF Mono", Consolas, monospace;
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed #334155;
+}
+
+.score-details {
+  margin-top: 20px;
+}
+
+.score-details > summary {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  margin-bottom: 8px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.score-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.score-details > summary::before {
+  content: "▾  ";
+  color: #64748b;
+}
+
+.score-details:not([open]) > summary::before {
+  content: "▸  ";
+}
+
+.score-details > summary:hover {
+  color: #cbd5e1;
+}
+
+.score-explainer {
+  background: #1e293b;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.score-explainer p {
+  margin: 8px 0;
+}
+
+.score-explainer code {
+  background: #0f172a;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 11px;
+  color: #7dd3fc;
+}
+
+.formula-hero {
+  font-family: ui-monospace, "SF Mono", Consolas, monospace;
+  color: #38bdf8;
+  background: #0f172a;
+  padding: 8px;
+  border-radius: 4px;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.range {
+  display: inline-block;
+  background: #334155;
+  color: #cbd5e1;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  font-weight: 400;
+  vertical-align: middle;
+}
+
+.zero-note {
+  color: #cbd5e1;
+  font-size: 11px;
+  padding: 6px 8px;
+  background: #0f172a;
+  border-radius: 4px;
+}
+
+.thresholds {
+  width: 100%;
+  margin-top: 10px;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.thresholds th,
+.thresholds td {
+  padding: 4px 6px;
+  text-align: left;
+  border-bottom: 1px solid #334155;
+}
+
+.thresholds th {
+  color: #94a3b8;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+}
+
 .err {
   color: #fca5a5;
   background: #450a0a;

@@ -111,7 +111,14 @@ export default function FloodMap({ user, waterways, result, onPick }: Props) {
             <br />
             Gain above water: +{c.elevationGainMeters.toFixed(1)}m
             <br />
-            Distance: {(c.distanceToUserMeters / 1000).toFixed(2)}km
+            {c.routedDistanceMeters != null && c.routedDurationSeconds != null ? (
+              <>
+                Walking: {(c.routedDistanceMeters / 1000).toFixed(2)}km ·{" "}
+                {Math.round(c.routedDurationSeconds / 60)} min
+              </>
+            ) : (
+              <>Distance: {(c.distanceToUserMeters / 1000).toFixed(2)}km</>
+            )}
             {c.crossesWater && (
               <>
                 <br />
@@ -122,14 +129,18 @@ export default function FloodMap({ user, waterways, result, onPick }: Props) {
         </Marker>
       ))}
 
-      {user && result?.topCandidates[0] && (
-        <Polyline
-          positions={[
-            [user.lat, user.lng],
-            [result.topCandidates[0].position.lat, result.topCandidates[0].position.lng],
-          ]}
-          pathOptions={{ color: "#10b981", weight: 4, dashArray: "8 6" }}
-        />
+      {result?.topCandidates.map((c, i) =>
+        c.route ? (
+          <Polyline
+            key={`route-${i}`}
+            positions={c.route.geometry.map((g) => [g.lat, g.lng])}
+            pathOptions={
+              i === 0
+                ? { color: "#10b981", weight: 5 }
+                : { color: "#38bdf8", weight: 3, opacity: 0.6, dashArray: "4 4" }
+            }
+          />
+        ) : null,
       )}
     </MapContainer>
   );
