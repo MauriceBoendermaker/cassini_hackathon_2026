@@ -1,0 +1,56 @@
+# Python virtual env
+.venv/
+
+# Node
+node_modules/
+
+# Environment files
+.env
+.env.*
+!.env.development
+!.env.example
+*.env.local
+
+# IDEs
+.idea/
+.vscode/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Build / dist
+.next/
+dist/
+build/
+out/
+coverage/
+*.tsbuildinfo
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# PHP / Laravel
+vendor/
+storage/*.key
+bootstrap/cache/*.php
+.phpunit.result.cache
+
+# Docker
+docker-compose.override.yml
+
+# Misc
+*.tmp
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude
+.claude/
