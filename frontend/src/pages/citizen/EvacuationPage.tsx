@@ -23,7 +23,6 @@ import {
   type RouteStep,
 } from "../../lib/route";
 import type { LatLng } from "../../lib/geo";
-import { CompassRing } from "../../components/overlays/CompassRing";
 
 /** Demo destination: 300 m NE of the user's GPS. OSRM snaps this to the
  *  nearest road, so it doesn't matter that it's not on a named feature —
@@ -123,7 +122,7 @@ export function EvacuationPage() {
   const destinationLabel = lastStep?.name || "Higher ground";
 
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative" }}>
+    <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
       <AppBar
         sub="EVACUATION ROUTE"
         title={destinationLabel}
@@ -446,9 +445,6 @@ export function EvacuationPage() {
         />
       )}
 
-      {/* Static compass-bezel ring inset around the phone-frame edge —
-          decorative instrument-face overlay for the directions page. */}
-      <CompassRing />
     </div>
   );
 }

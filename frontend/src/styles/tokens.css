@@ -60,9 +60,11 @@
   --font-ui:   'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
 
-  /* iOS safe-area fallbacks (inside the rendered phone frame) */
-  --sa-top:    44px;
-  --sa-bottom: 34px;
+  /* iOS safe-area fallbacks (inside the rendered phone frame).
+     These are only used in desktop preview — real mobile / PWA overrides
+     them with env(safe-area-inset-*) and hides the dummy chrome entirely. */
+  --sa-top:    28px;
+  --sa-bottom: 20px;
 }
 
 [data-theme="dark"] {

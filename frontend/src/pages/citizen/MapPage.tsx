@@ -21,7 +21,6 @@ import {
 } from "../../components/icons/Icons";
 import { FLOOD_LAYERS, SOS_PINS, FF_UNITS, VALENCIA } from "../../lib/demo";
 import { tileLayerConfig } from "../../lib/map";
-import { CompassRing } from "../../components/overlays/CompassRing";
 
 // Flood-specific overlays
 const ROAD_CLOSURES: [number, number][][] = [
@@ -351,7 +350,7 @@ export function MapPage() {
   const activeModuleStage = activeModule.stages[effectiveStage - 1];
 
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative" }}>
+    <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
       {!online && (
         <div className="offline-bar">
           <IconWifiOff size={11} style={{ verticalAlign: "-2px", marginRight: 6 }} />
@@ -516,9 +515,6 @@ export function MapPage() {
         />
       )}
 
-      {/* Static compass-bezel ring inset around the phone-frame edge —
-          decorative instrument-face overlay matching the directions page. */}
-      <CompassRing />
     </div>
   );
 }

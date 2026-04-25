@@ -60,6 +60,21 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
   flex-direction: column;
 }
 
+/* When the compass bezel is active, inset the viewport by the bezel width so
+   the bezel SVG can render in the resulting outer gap without obscuring any
+   page or chrome content. The `.compass-ring` is rendered as a sibling of
+   .app-viewport with `position: absolute; inset: 0` of .app-frame, so it
+   traces the phone-frame perimeter exactly. */
+.app-frame.has-compass {
+  padding: 6px;
+}
+.app-frame.has-compass > .app-viewport {
+  border-radius: calc(36px - 6px);
+}
+@media (max-width: 520px), (display-mode: standalone), (pointer: coarse) {
+  .app-frame.has-compass > .app-viewport { border-radius: 0; }
+}
+
 /* Drop the fake device dressing on any real mobile viewport, any touch
  * device, OR when running as an installed PWA. The phone-frame mockup is
  * a desktop-only pitch visual — on real touch hardware we want to see
@@ -441,47 +456,65 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
   transform-origin: 50% 50%;
 }
 
-/* Static compass-bezel ring — black band inset around the phone-frame edge
-   with white tick imprint and cardinal letters burned in. SVG handles the
-   tick distribution so the imprint follows the rounded-rect perimeter
-   cleanly. Doesn't rotate. */
+/* Compass-bezel ring traced on the inside edge of the page. SVG draws the
+   metallic black band, white tick imprint and major ticks; the whole
+   element rotates by `-heading` so cardinals stay glued to real-world
+   directions. The rotation transform falls back to 0deg when no sensor
+   data is available, so the ring still renders as a static instrument
+   face. */
 .compass-ring {
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 1100;
+  transform-origin: 50% 50%;
+  transition: transform 0.18s ease-out;
+  will-change: transform;
 }
 .compass-ring svg {
   display: block;
-  filter: drop-shadow(0 0 0.5px rgba(0, 0, 0, .8));
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .35));
 }
 
-.cr-cardinal {
+/* Red North triangle — bright tip pointing into the bezel band on the top
+   edge so true north is unmistakable. Glows softly via drop-shadow. */
+.cr-north {
   position: absolute;
-  font-family: var(--font-mono);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: #fff;
-  pointer-events: none;
-  background: #0b0b0b;
-  padding: 0 3px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
-  font-size: 9px;
-  line-height: 1;
-}
-.cr-n {
-  top: 0; left: 50%;
+  top: 0;
+  left: 50%;
   transform: translateX(-50%);
-  color: #e23b3b;
-  font-size: 10px;
-  padding: 0 4px;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 6px solid #e8443b;
+  pointer-events: none;
+  z-index: 1;
+  filter: drop-shadow(0 0 3px rgba(232, 68, 59, 0.6));
 }
-.cr-e { top: 50%; right: 0; transform: translateY(-50%); }
-.cr-s { bottom: 0; left: 50%; transform: translateX(-50%); }
-.cr-w { top: 50%; left: 0; transform: translateY(-50%); }
+
+/* Floating "Enable compass" pill — only shown when the device requires a
+   user gesture to grant the orientation sensor permission (iOS Safari). */
+.compass-enable {
+  position: absolute;
+  top: 60px;
+  right: 14px;
+  z-index: 1110;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 11px;
+  background: var(--brand);
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  font: 600 11px var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .25);
+  cursor: pointer;
+}
+.compass-enable:active { transform: scale(0.97); }
 
 /* Pinned action bar at the bottom of the evacuation page — stays put while
    the step list scrolls above it. */
