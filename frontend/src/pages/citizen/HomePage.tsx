@@ -16,6 +16,7 @@ import {
 import { formatRelative, NOTIFICATIONS, DROUGHT_NOTIFICATIONS, STAGE_COLORS } from "../../lib/demo";
 import { stageHeadline, t } from "../../lib/i18n";
 import { useWeather } from "../../lib/useWeather";
+import { useConditions } from "../../lib/useConditions";
 
 function nextEfasCountdown(): string {
   const now = new Date();
@@ -33,6 +34,7 @@ export function HomePage() {
   const navigate = useNavigate();
   // Fall back to Valencia coords so weather always loads even before GPS resolves.
   const weather = useWeather(userPosition?.lat ?? 39.4699, userPosition?.lng ?? -0.3763);
+  const conditions = useConditions();
 
   const [countdown, setCountdown] = useState(nextEfasCountdown);
   useEffect(() => {
@@ -199,7 +201,19 @@ export function HomePage() {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           {activeModule.metrics.map((m) => {
             let value = m.value(stage);
-            if (weather) {
+            let unit = m.unit;
+            if (conditions) {
+              if (m.label.startsWith("Rainfall")) value = String(conditions.precipitation_1h_mm);
+              if (m.label.startsWith("Wind"))     value = String(conditions.wind_gusts_kmh);
+              if (m.label.startsWith("River")) {
+                if (conditions.river_discharge_m3s !== null) {
+                  value = conditions.river_discharge_m3s.toFixed(1);
+                  unit = "m³/s";
+                } else {
+                  value = conditions.river_level_m.toFixed(2);
+                }
+              }
+            } else if (weather) {
               if (m.label.startsWith("Rainfall")) value = String(weather.precipitation1h);
               if (m.label.startsWith("Wind"))     value = String(weather.windGusts);
             }
@@ -208,7 +222,7 @@ export function HomePage() {
                 key={m.label}
                 label={m.label}
                 value={value}
-                unit={m.unit}
+                unit={unit}
                 tone={m.tone(stage)}
               />
             );

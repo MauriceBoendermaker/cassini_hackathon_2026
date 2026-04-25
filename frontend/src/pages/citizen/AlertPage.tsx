@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAlert } from "../../state/AlertContext";
 import { useSettings } from "../../state/SettingsContext";
+import { useConditions } from "../../lib/useConditions";
 
 function nextEfasParts(): { h: string; m: string; s: string } {
   const now = new Date();
@@ -28,9 +29,31 @@ export function AlertPage() {
   const { effectiveStage, activeModule } = useAlert();
   const { online } = useSettings();
   const navigate = useNavigate();
+  const conditions = useConditions();
   const stage = effectiveStage;
   const s = activeModule.stages[stage - 1];
   const isOfflineCritical = !online && stage >= 3;
+
+  // Augment the static disaster-module source lines with live observation
+  // metadata when the backend is reachable. Falls back to the canned lines
+  // when the API isn't responding (e.g. backend down, CORS, offline).
+  const sourceLines = (() => {
+    if (!conditions || activeModule.id !== "flood") return activeModule.sourceLines;
+    const obs = conditions.river_observed_at
+      ? new Date(conditions.river_observed_at).toLocaleString("en-GB", {
+          hour: "2-digit", minute: "2-digit", day: "2-digit", month: "short",
+        })
+      : "—";
+    const live: string[] = [];
+    if (conditions.river_station) {
+      live.push(`Source · Rijkswaterstaat · ${conditions.river_station}`);
+      live.push(`Discharge · ${conditions.river_discharge_m3s ?? "—"} m³/s · obs ${obs}`);
+    } else {
+      live.push("Source · Rijkswaterstaat (no recent obs)");
+    }
+    live.push(`Wx · Open-Meteo · ${conditions.precipitation_1h_mm} mm/h · ${conditions.wind_gusts_kmh} km/h gusts`);
+    return live;
+  })();
 
   const [now, setNow] = useState(() => new Date());
   const [cd, setCd] = useState(nextEfasParts);
@@ -217,7 +240,7 @@ export function AlertPage() {
             letterSpacing: "0.04em",
           }}
         >
-          {activeModule.sourceLines.map((line, i) => (
+          {sourceLines.map((line, i) => (
             <div key={i}>{line}</div>
           ))}
         </div>
