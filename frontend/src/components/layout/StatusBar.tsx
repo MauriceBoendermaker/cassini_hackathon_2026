@@ -1,12 +1,21 @@
-type Props = {
-  time?: string;
-  tone?: "light" | "dark";
-};
+import { useEffect, useState } from "react";
 
-export function StatusBar({ time = "14:08", tone = "light" }: Props) {
+type Props = { tone?: "light" | "dark" };
+
+export function StatusBar({ tone = "light" }: Props) {
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 10_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const hh = String(now.getHours()).padStart(2, "0");
+  const mm = String(now.getMinutes()).padStart(2, "0");
+
   return (
     <div className={"status-bar " + (tone === "dark" ? "on-dark" : "")}>
-      <div>{time}</div>
+      <div>{hh}:{mm}</div>
       <div className="sb-right">
         <div className="sb-bars">
           <i />

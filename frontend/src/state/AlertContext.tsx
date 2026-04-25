@@ -103,21 +103,10 @@ export function AlertProvider({ children }: { children: ReactNode }) {
     if (country) setUserCountry(country);
   }, []);
 
-  // Best-effort silent geolocation on mount — only succeeds if the user
-  // has previously granted permission (or the browser auto-allows). No
-  // permission prompt is forced; the onboarding flow handles that.
+  // Request geolocation on mount — triggers the browser permission popup on
+  // first visit so the place name shows immediately without waiting for onboarding.
   useEffect(() => {
-    if (typeof navigator === "undefined" || !navigator.permissions) {
-      return;
-    }
-    navigator.permissions
-      .query({ name: "geolocation" as PermissionName })
-      .then((res) => {
-        if (res.state === "granted") void requestLocation();
-      })
-      .catch(() => {
-        /* permissions API not supported — skip */
-      });
+    void requestLocation();
   }, [requestLocation]);
 
   const scenarioStage = scenarioT > 0 ? stageAtScenario(scenarioT) : null;

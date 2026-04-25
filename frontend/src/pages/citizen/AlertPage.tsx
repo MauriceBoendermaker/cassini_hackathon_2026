@@ -1,6 +1,18 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAlert } from "../../state/AlertContext";
 import { useSettings } from "../../state/SettingsContext";
+
+function nextEfasParts(): { h: string; m: string; s: string } {
+  const now = new Date();
+  const secsInto6h = (now.getUTCHours() % 6) * 3600 + now.getUTCMinutes() * 60 + now.getUTCSeconds();
+  const rem = 6 * 3600 - secsInto6h;
+  return {
+    h: String(Math.floor(rem / 3600)).padStart(2, "0"),
+    m: String(Math.floor((rem % 3600) / 60)).padStart(2, "0"),
+    s: String(rem % 60).padStart(2, "0"),
+  };
+}
 import { StatusBar } from "../../components/layout/StatusBar";
 import { HomeIndicator } from "../../components/layout/HomeIndicator";
 import {
@@ -19,6 +31,18 @@ export function AlertPage() {
   const stage = effectiveStage;
   const s = activeModule.stages[stage - 1];
   const isOfflineCritical = !online && stage >= 3;
+
+  const [now, setNow] = useState(() => new Date());
+  const [cd, setCd] = useState(nextEfasParts);
+  useEffect(() => {
+    const clockId = setInterval(() => setNow(new Date()), 30_000);
+    const cdId    = setInterval(() => setCd(nextEfasParts()), 1_000);
+    return () => { clearInterval(clockId); clearInterval(cdId); };
+  }, []);
+
+  const hh = String(now.getHours()).padStart(2, "0");
+  const mm = String(now.getMinutes()).padStart(2, "0");
+  const issuedStr = `${hh}:${mm} CEST`;
 
   // Stage 2 (yellow) needs dark UI — the rest use white. rgb is the channel
   // triple we interpolate transparency from, so accents (chips, card tints)
@@ -68,7 +92,7 @@ export function AlertPage() {
             marginBottom: 8,
           }}
         >
-          {s.label} · ISSUED 14:08 CEST · 29 OCT 2026
+          {s.label} · ISSUED {issuedStr}
         </div>
         <h1
           style={{
@@ -121,11 +145,11 @@ export function AlertPage() {
             )}
           </div>
           <div className="countdown" style={{ marginTop: 10 }}>
-            <span className="num">01</span>
+            <span className="num">{cd.h}</span>
             <span className="lbl">H</span>
-            <span className="num">42</span>
+            <span className="num">{cd.m}</span>
             <span className="lbl">M</span>
-            <span className="num">08</span>
+            <span className="num">{cd.s}</span>
             <span className="lbl">S</span>
           </div>
           {isOfflineCritical && (

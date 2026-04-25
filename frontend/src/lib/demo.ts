@@ -1,5 +1,5 @@
 // Aegis demo dataset — Valencia 2024 (DANA) scripted scenario.
-// Replace with live feeds when backend is wired.
+// Replace with live EFAS + Rijkswaterstaat feeds when backend is wired.
 
 export type StageNum = 1 | 2 | 3 | 4 | 5;
 
@@ -7,7 +7,7 @@ export type StageDef = {
   n: StageNum;
   key: "monitoring" | "watch" | "warning" | "severe" | "emergency";
   label: string;
-  short: string;          // EFAS 1..5
+  short: string;
   tone: "info" | "caution" | "warn" | "danger" | "critical";
   headline: string;
   blurb: string;
@@ -64,7 +64,7 @@ export function fmtClock(d: Date): string {
   return pad2(d.getHours()) + ":" + pad2(d.getMinutes());
 }
 
-// ─── Valencia 2024 scenario ───────────────────────────────────────────
+// ─── Valencia 2024 scenario ───────────────────────────────────────────────────
 
 export type ScenarioEvent = {
   t: number;       // hours from t=0 (Oct 29, 2024 09:00 local)
@@ -117,8 +117,8 @@ export const FLOOD_LAYERS: Record<"watch" | "warning" | "severe", LngLat[][]> = 
 export type SOSPin = {
   id: string;
   lat: number; lng: number;
-  age: number;     // minutes since requested
-  n: number;       // people involved
+  age: number;
+  n: number;
   note: string;
 };
 
@@ -146,8 +146,7 @@ export const FF_UNITS: FFUnit[] = [
 
 export type AegisNotification = {
   id: string;
-  /** Minutes before "now" (page load) when this notification was issued.
-   * Renders via `formatRelative` so the demo always looks current. */
+  /** Minutes before "now" (page load) when this notification was issued. */
   minutesAgo: number;
   stage: StageNum;
   title: string;
@@ -155,9 +154,9 @@ export type AegisNotification = {
 };
 
 export const NOTIFICATIONS: AegisNotification[] = [
-  { id: "n1", minutesAgo: 12,      stage: 5, title: "Evacuation order issued",
+  { id: "n1", minutesAgo: 12,       stage: 5, title: "Evacuation order issued",
     body: "Mandatory evacuation. Move to designated assembly point now. Follow blue route." },
-  { id: "n2", minutesAgo: 38,      stage: 4, title: "Severe flood warning",
+  { id: "n2", minutesAgo: 38,       stage: 4, title: "Severe flood warning",
     body: "Flash flood imminent. Move to upper floors. Avoid basements and underpasses." },
   { id: "n3", minutesAgo: 60 * 5,  stage: 3, title: "Flood warning",
     body: "Localised flooding likely within 6–12 hours. Prepare to move." },

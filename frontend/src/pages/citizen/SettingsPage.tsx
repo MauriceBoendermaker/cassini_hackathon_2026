@@ -45,8 +45,8 @@ export function SettingsPage() {
     ? `${userPlaceName} · ${userCountry ?? ""}`.trim().replace(/·\s*$/, "").toUpperCase()
     : userPosition
       ? "YOUR AREA"
-      : "QUART DE POBLET · ES";
-  const placeFallback = userPlaceName ?? (userPosition ? "your area" : "Quart de Poblet");
+      : "—";
+  const placeFallback = userPlaceName ?? (userPosition ? "your area" : "—");
   const areaLine = `${alertRadiusKm} km radius · ${placeFallback}`;
 
   const tiersSub = (() => {
