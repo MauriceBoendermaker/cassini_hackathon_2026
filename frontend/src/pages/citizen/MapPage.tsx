@@ -29,15 +29,57 @@ const ROAD_CLOSURES: [number, number][][] = [
   [[39.458, -0.353], [39.461, -0.348]],
 ];
 
-// Real SAIH-Júcar gauging stations along the active Túria channel.
-// Manises sits on the upstream Túria; the rest trace the Plan Sur ("Cauce Nuevo")
-// new river bed that carries flood waters south of Valencia to the sea.
-const RIVER_SENSORS = [
-  { id: "08089", name: "Manises",         river: "Túria",           lat: 39.4895, lng: -0.4655, level: 2.1, status: "warn"  as const },
-  { id: "08092", name: "Quart de Poblet", river: "Túria · Plan Sur", lat: 39.4720, lng: -0.4380, level: 3.4, status: "alert" as const },
-  { id: "08097", name: "Paiporta",        river: "Túria · Plan Sur", lat: 39.4475, lng: -0.4015, level: 1.8, status: "ok"    as const },
-  { id: "08103", name: "Pinedo",          river: "Túria · mouth",    lat: 39.4230, lng: -0.3290, level: 0.9, status: "ok"    as const },
+// Real river-gauge stations across Europe, on actual rivers/waterways.
+// Source agencies: CHJ (Confederación Hidrográfica del Júcar) for Spain,
+// RWS (Rijkswaterstaat / waterinfo.rws.nl) for the Netherlands.
+// At runtime the closest stations to the user's GPS are shown.
+type RiverStation = {
+  id: string;
+  name: string;
+  river: string;
+  lat: number;
+  lng: number;
+  level: number;
+  status: "ok" | "warn" | "alert";
+};
+
+const RIVER_STATIONS: RiverStation[] = [
+  // Rijkswaterstaat — Rhine-Meuse delta & North Sea coast
+  { id: "RWS-KAT", name: "Katwijk uitwatering", river: "Oude Rijn",       lat: 52.2080, lng: 4.4020, level: 0.4, status: "ok"    },
+  { id: "RWS-LDN", name: "Leiden",              river: "Oude Rijn",       lat: 52.1620, lng: 4.4900, level: 0.5, status: "ok"    },
+  { id: "RWS-HVH", name: "Hoek van Holland",    river: "Nieuwe Waterweg", lat: 51.9785, lng: 4.1300, level: 1.1, status: "warn"  },
+  { id: "RWS-MAS", name: "Maassluis",           river: "Nieuwe Waterweg", lat: 51.9210, lng: 4.2510, level: 0.9, status: "ok"    },
+  { id: "RWS-LOB", name: "Lobith",              river: "Bovenrijn",       lat: 51.8525, lng: 6.1075, level: 1.6, status: "warn"  },
+  { id: "RWS-TIE", name: "Tiel",                river: "Waal",            lat: 51.8920, lng: 5.4280, level: 1.4, status: "warn"  },
+  { id: "RWS-ARN", name: "Arnhem",              river: "Nederrijn",       lat: 51.9750, lng: 5.9120, level: 1.0, status: "ok"    },
+
+  // CHJ · SAIH-Júcar — active Túria channel (Plan Sur / Cauce Nuevo)
+  { id: "08089",   name: "Manises",             river: "Túria",            lat: 39.4895, lng: -0.4655, level: 2.1, status: "warn"  },
+  { id: "08092",   name: "Quart de Poblet",     river: "Túria · Plan Sur", lat: 39.4720, lng: -0.4380, level: 3.4, status: "alert" },
+  { id: "08097",   name: "Paiporta",            river: "Túria · Plan Sur", lat: 39.4475, lng: -0.4015, level: 1.8, status: "ok"    },
+  { id: "08103",   name: "Pinedo",              river: "Túria · mouth",    lat: 39.4230, lng: -0.3290, level: 0.9, status: "ok"    },
 ];
+
+const VALENCIA_FALLBACK = RIVER_STATIONS.filter((s) => /^08/.test(s.id));
+
+function distKm(aLat: number, aLng: number, bLat: number, bLng: number) {
+  const R = 6371;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(bLat - aLat);
+  const dLng = toRad(bLng - aLng);
+  const s =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+}
+
+function pickRiverSensors(pos: { lat: number; lng: number } | null): RiverStation[] {
+  if (!pos) return VALENCIA_FALLBACK;
+  const ranked = RIVER_STATIONS.map((s) => ({ s, d: distKm(pos.lat, pos.lng, s.lat, s.lng) }))
+    .sort((a, b) => a.d - b.d);
+  const near = ranked.filter((x) => x.d <= 150).slice(0, 4).map((x) => x.s);
+  return near.length > 0 ? near : VALENCIA_FALLBACK;
+}
 
 // Drought-specific overlays — reuse FLOOD_LAYERS geometry with drought colours
 const DROUGHT_COLORS = {
@@ -115,6 +157,8 @@ export function MapPage() {
   const sensorLayersRef = useRef<L.Layer[]>([]);
 
   const hasNonDefault = !layers.primaryZones || layers.secondary || layers.sensors;
+
+  const riverSensors = useMemo(() => pickRiverSensors(userPosition), [userPosition]);
 
   useEffect(() => {
     if (!mapEl.current || mapRef.current) return;
@@ -252,7 +296,7 @@ export function MapPage() {
     if (!layers.sensors) return;
 
     if (isFlood) {
-      RIVER_SENSORS.forEach((s) => {
+      riverSensors.forEach((s) => {
         const color =
           s.status === "alert" ? "#c8412c" : s.status === "warn" ? "#f5c542" : "oklch(0.65 0.14 145)";
         const ic = L.divIcon({
@@ -283,7 +327,7 @@ export function MapPage() {
         sensorLayersRef.current.push(m);
       });
     }
-  }, [layers.sensors, isFlood]);
+  }, [layers.sensors, isFlood, riverSensors]);
 
   function setLayer<K extends keyof LayerState>(key: K, val: boolean) {
     setLayers((prev) => ({ ...prev, [key]: val }));
