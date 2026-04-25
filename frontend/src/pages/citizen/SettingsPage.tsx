@@ -166,20 +166,45 @@ export function SettingsPage() {
             >
               <div className="lr-icon"><IconShield size={18} /></div>
               <div className="lr-body">
-                <div className="lr-title">View as</div>
-                <div className="lr-sub">Switch between citizen & firefighter</div>
+                <div className="lr-title">Rescue mode</div>
+                <div className="lr-sub">
+                  {role === "firefighter" ? "On · firefighter ops view" : "Off · citizen view"}
+                </div>
               </div>
-              <div className="seg" onClick={(e) => e.stopPropagation()}>
-                <button className={role === "citizen" ? "active" : ""} onClick={() => setRole("citizen")}>
-                  Citizen
-                </button>
-                <button
-                  className={role === "firefighter" ? "active" : ""}
-                  onClick={() => { setRole("firefighter"); navigate("/ops"); }}
-                >
-                  Rescue
-                </button>
-              </div>
+              <button
+                role="switch"
+                aria-checked={role === "firefighter"}
+                aria-label="Rescue mode"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setRole(role === "firefighter" ? "citizen" : "firefighter");
+                }}
+                style={{
+                  width: 34,
+                  height: 20,
+                  borderRadius: 10,
+                  background: role === "firefighter" ? "var(--ink-card)" : "var(--line-strong, #c5c2bb)",
+                  border: "none",
+                  cursor: "pointer",
+                  position: "relative",
+                  flexShrink: 0,
+                  transition: "background .15s",
+                }}
+              >
+                <span
+                  style={{
+                    position: "absolute",
+                    top: 3,
+                    left: role === "firefighter" ? 17 : 3,
+                    width: 14,
+                    height: 14,
+                    borderRadius: "50%",
+                    background: "#fff",
+                    transition: "left .15s",
+                    display: "block",
+                  }}
+                />
+              </button>
             </div>
             <div className="list-row" onClick={() => navigate("/about")}>
               <div className="lr-icon"><IconInfo size={18} /></div>
