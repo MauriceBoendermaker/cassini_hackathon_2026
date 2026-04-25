@@ -133,9 +133,8 @@ export function SOSPage() {
             position: "relative",
             marginTop: 36,
             marginBottom: 24,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            width: 200,
+            height: 200,
           }}
         >
           {phase === "holding" && (
