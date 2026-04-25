@@ -7,7 +7,6 @@ import { AlertAreaSheet } from "./sheets/AlertAreaSheet";
 import { VulnerableHouseholdSheet } from "./sheets/VulnerableHouseholdSheet";
 import { EmergencyContactsSheet } from "./sheets/EmergencyContactsSheet";
 import { AppBar } from "../../components/layout/AppBar";
-import { AegisLogo } from "../../components/brand/AegisLogo";
 import {
   IconBell,
   IconChevronL,
@@ -33,7 +32,7 @@ export function SettingsPage() {
     language, setLanguage, dark, setDark, online, setOnline, role, setRole,
     alertTiers, alertTiersDND, alertRadiusKm, householdMembers, emergencyContacts,
   } = useSettings();
-  const { userPlaceName, userCountry, userPosition } = useAlert();
+  const { userPlaceName, userPosition } = useAlert();
   const [showLang, setShowLang] = useState(false);
   const [showAlertTiers, setShowAlertTiers] = useState(false);
   const [showAlertArea, setShowAlertArea] = useState(false);
@@ -41,11 +40,6 @@ export function SettingsPage() {
   const [showContacts, setShowContacts] = useState(false);
 
   const cur = EU_LANGUAGES.find((l) => l.code === language) ?? EU_LANGUAGES[5];
-  const profileLine = userPlaceName
-    ? `${userPlaceName} · ${userCountry ?? ""}`.trim().replace(/·\s*$/, "").toUpperCase()
-    : userPosition
-      ? "YOUR AREA"
-      : "—";
   const placeFallback = userPlaceName ?? (userPosition ? "your area" : "—");
   const areaLine = `${alertRadiusKm} km radius · ${placeFallback}`;
 
@@ -78,38 +72,7 @@ export function SettingsPage() {
         }
       />
       <div className="scroll">
-        {/* Profile */}
-        <div
-          className="card"
-          style={{
-            background: "var(--ink-card)",
-            color: "var(--ink-card-fg)",
-            borderColor: "transparent",
-            display: "flex",
-            alignItems: "center",
-            gap: 14,
-          }}
-        >
-          <AegisLogo size={40} color="#fff" mark="var(--ink-card)" />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 15, fontWeight: 600 }}>Profile · resident</div>
-            <div
-              style={{
-                fontSize: 12,
-                opacity: 0.7,
-                fontFamily: "var(--font-mono)",
-                textTransform: "uppercase",
-                letterSpacing: "0.04em",
-                marginTop: 2,
-              }}
-            >
-              {profileLine}
-            </div>
-          </div>
-          <IconChevronR size={18} />
-        </div>
-
-        <div className="eyebrow" style={{ marginTop: 22, marginBottom: 6 }}>Preferences</div>
+        <div className="eyebrow" style={{ marginTop: 4, marginBottom: 6 }}>Preferences</div>
         <div className="card" style={{ padding: "4px 14px" }}>
           <div className="list">
             <div className="list-row" onClick={() => setShowLang(true)}>
