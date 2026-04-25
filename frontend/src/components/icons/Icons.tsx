@@ -269,3 +269,10 @@ export const IconArrow = (p: IP) => (
     <path d="M5 12h14M13 6l6 6-6 6" />
   </Icon>
 );
+
+export const IconCamera = (p: IP) => (
+  <Icon {...p}>
+    <path d="M3 8h3l2-3h8l2 3h3v11H3z" />
+    <circle cx="12" cy="13" r="4" />
+  </Icon>
+);

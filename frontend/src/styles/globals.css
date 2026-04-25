@@ -441,42 +441,81 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
   transform-origin: 50% 50%;
 }
 
-/* Compass ring — overlays the EvacuationPage tracing the phone-frame edge
-   with N/E/S/W markers. Rotates as a whole to indicate magnetic north. */
+/* Traditional compass-bezel ring — black band inset around the phone-frame
+   edge with white cardinals, red North, and intercardinal tick marks. The
+   whole .compass-ring rotates as a unit so the markers always face their
+   real-world direction. */
 .compass-ring {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  border: 1.5px dashed oklch(0.62 0.18 240 / 0.32);
-  border-radius: 32px;
   z-index: 1100;
   transform-origin: 50% 50%;
   transition: transform 0.18s ease-out;
 }
-@media (max-width: 520px), (display-mode: standalone), (pointer: coarse) {
-  .compass-ring { border-radius: 0; }
+.cr-band {
+  position: absolute;
+  inset: 0;
+  border: 14px solid #0b0b0b;
+  border-radius: 32px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, .06),
+    0 0 0 1px rgba(0, 0, 0, .55);
 }
-.compass-mark {
+@media (max-width: 520px), (display-mode: standalone), (pointer: coarse) {
+  .cr-band { border-radius: 0; border-width: 12px; }
+}
+
+.cr-label {
   position: absolute;
   font-family: var(--font-mono);
-  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  background: var(--surface);
-  color: var(--brand);
-  border: 1.5px solid var(--brand);
-  padding: 3px 8px;
-  border-radius: 999px;
-  white-space: nowrap;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, .08);
+  letter-spacing: 0.08em;
+  color: #fff;
+  pointer-events: none;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, .6);
 }
-.compass-mark-n {
-  top: 8px; left: 50%; transform: translateX(-50%);
-  background: var(--brand); color: #fff; border-color: transparent;
+.cr-n {
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 14px; height: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  color: #d83838;          /* red North */
 }
-.compass-mark-e { top: 50%; right: 8px;  transform: translateY(-50%); }
-.compass-mark-s { bottom: 8px; left: 50%; transform: translateX(-50%); }
-.compass-mark-w { top: 50%; left: 8px;  transform: translateY(-50%); }
+.cr-e { top: 50%; right: 0; width: 14px; height: 14px;
+  display: flex; align-items: center; justify-content: center;
+  transform: translateY(-50%); font-size: 11px; }
+.cr-s { bottom: 0; left: 50%; width: 14px; height: 14px;
+  display: flex; align-items: center; justify-content: center;
+  transform: translateX(-50%); font-size: 11px; }
+.cr-w { top: 50%; left: 0; width: 14px; height: 14px;
+  display: flex; align-items: center; justify-content: center;
+  transform: translateY(-50%); font-size: 11px; }
+@media (max-width: 520px), (display-mode: standalone), (pointer: coarse) {
+  .cr-n, .cr-e, .cr-s, .cr-w { width: 12px; height: 12px; font-size: 10px; }
+  .cr-n { font-size: 11px; }
+}
+
+.cr-tick {
+  position: absolute;
+  width: 1.5px;
+  height: 7px;
+  background: #fff;
+  pointer-events: none;
+  opacity: 0.85;
+}
+/* Tick positions sit on the band's diagonals */
+.cr-tick-ne { top: 14px;  right: 14px;  transform: rotate(45deg);  transform-origin: center; }
+.cr-tick-se { bottom: 14px; right: 14px; transform: rotate(-45deg); transform-origin: center; }
+.cr-tick-sw { bottom: 14px; left: 14px;  transform: rotate(45deg);  transform-origin: center; }
+.cr-tick-nw { top: 14px;  left: 14px;   transform: rotate(-45deg); transform-origin: center; }
+@media (max-width: 520px), (display-mode: standalone), (pointer: coarse) {
+  .cr-tick-ne { top: 12px; right: 12px; }
+  .cr-tick-se { bottom: 12px; right: 12px; }
+  .cr-tick-sw { bottom: 12px; left: 12px; }
+  .cr-tick-nw { top: 12px; left: 12px; }
+}
 
 /* Small floating button to grant iOS the orientation permission. */
 .compass-enable {

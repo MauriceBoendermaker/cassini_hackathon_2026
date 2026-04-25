@@ -1,19 +1,25 @@
 /**
- * Rotating compass ring overlay — sits inside .app-viewport tracing its
- * outer edge with N/E/S/W markers. Rotates by `-heading` so the markers
- * always point at their real-world direction as the user rotates the phone.
+ * Traditional compass ring overlay — black bezel inset around the phone-frame
+ * edge with white cardinal letters, a red North marker, and white tick marks
+ * at the four intercardinal points (NE / SE / SW / NW). The whole ring
+ * rotates by `-heading` so the markers always face their real-world
+ * direction as the user turns the phone.
  *
- * Pure presentational — relies on the parent providing a heading from
- * `useCompass()`. Render `null` when no heading is available; that's the
- * graceful fallback for unsupported / denied compass.
+ * Render `null` (no fallback) when no heading is available — the parent
+ * decides when this is shown based on `useCompass()`.
  */
 export function CompassRing({ heading }: { heading: number }) {
   return (
     <div className="compass-ring" style={{ transform: `rotate(${-heading}deg)` }}>
-      <span className="compass-mark compass-mark-n">N</span>
-      <span className="compass-mark compass-mark-e">E</span>
-      <span className="compass-mark compass-mark-s">S</span>
-      <span className="compass-mark compass-mark-w">W</span>
+      <div className="cr-band" />
+      <span className="cr-label cr-n">N</span>
+      <span className="cr-label cr-e">E</span>
+      <span className="cr-label cr-s">S</span>
+      <span className="cr-label cr-w">W</span>
+      <span className="cr-tick cr-tick-ne" />
+      <span className="cr-tick cr-tick-se" />
+      <span className="cr-tick cr-tick-sw" />
+      <span className="cr-tick cr-tick-nw" />
     </div>
   );
 }
