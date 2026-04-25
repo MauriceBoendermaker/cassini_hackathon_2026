@@ -456,41 +456,25 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
   transform-origin: 50% 50%;
 }
 
-/* Compass-bezel ring traced on the inside edge of the page. SVG draws the
-   metallic black band, white tick imprint and major ticks; the whole
-   element rotates by `-heading` so cardinals stay glued to real-world
-   directions. The rotation transform falls back to 0deg when no sensor
-   data is available, so the ring still renders as a static instrument
-   face. */
+/* Compass-bezel ring traced on the inside edge of the phone-frame. The
+   black band path stays glued to the phone outline — only the white tick
+   imprint and the red North marker slide along the perimeter via
+   `stroke-dashoffset`, so the bezel doesn't rotate as a unit. */
 .compass-ring {
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 1100;
-  transform-origin: 50% 50%;
-  transition: transform 0.18s ease-out;
-  will-change: transform;
 }
 .compass-ring svg {
   display: block;
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .35));
 }
-
-/* Red North triangle — bright tip pointing into the bezel band on the top
-   edge so true north is unmistakable. Glows softly via drop-shadow. */
-.cr-north {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-bottom: 6px solid #e8443b;
-  pointer-events: none;
-  z-index: 1;
-  filter: drop-shadow(0 0 3px rgba(232, 68, 59, 0.6));
+/* Smooth transition on the dash offsets so the markings glide rather than
+   snap. Browsers animate stroke-dashoffset natively. */
+.compass-ring rect {
+  transition: stroke-dashoffset 0.18s ease-out;
+  will-change: stroke-dashoffset;
 }
 
 /* Floating "Enable compass" pill — only shown when the device requires a

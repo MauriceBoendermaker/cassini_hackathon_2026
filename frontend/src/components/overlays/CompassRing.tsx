@@ -3,16 +3,14 @@ import { useEffect, useRef, useState } from "react";
 /**
  * Compass-bezel ring traced on the inside edge of the phone-frame.
  *
- * Rendered at .app-frame level (sibling of .app-viewport) when the parent
- * sets the `has-compass` class, which insets the viewport by the bezel
- * width — leaving a 9 px gap that this SVG fills as a black band with a
- * subtle metallic gradient, white major / minor tick imprint, and a
- * bright-red triangle at North.
+ * Visual model: the black metallic band path stays glued to the phone-frame
+ * outline (it does not rotate). The white tick imprint and the red North
+ * marker slide *along* that path via `stroke-dashoffset` as the device
+ * heading changes — the bezel acts like a real compass face where only the
+ * markings move, not the bezel itself.
  *
- * Rotation: rotates by `-heading` so the bezel + N triangle stay glued to
- * real-world directions as the user turns the phone. When `heading` is
- * null (sensor unavailable / permission denied) the ring stays at 0° as a
- * static instrument-face decoration.
+ * pathLength=360 normalises the path so 1 unit ≈ 1° of a circular
+ * equivalent, which lets us bind dash offsets to heading directly.
  */
 export function CompassRing({ heading }: { heading?: number | null }) {
   const ref = useRef<HTMLDivElement | null>(null);
@@ -58,21 +56,36 @@ export function CompassRing({ heading }: { heading?: number | null }) {
   const cw = Math.max(0, W - bandWidth);
   const ch = Math.max(0, H - bandWidth);
 
-  // Normalise the rounded-rect path to 360 units so dasharrays distribute
-  // by exact tick count regardless of phone-frame width or height.
+  // Compute where on the path (in pathLength=360 units) the **top centre**
+  // sits, so we can anchor the red North marker there when heading = 0.
+  // The path starts at (x + pathRadius, y) and goes clockwise — top edge,
+  // top-right corner, right edge, bottom-right corner, bottom edge, …
+  const straightTop = Math.max(0, cw - 2 * pathRadius);
+  const straightSide = Math.max(0, ch - 2 * pathRadius);
+  const perimeter =
+    2 * straightTop + 2 * straightSide + 2 * Math.PI * pathRadius;
+  const topCenterUnits =
+    perimeter > 0 ? ((straightTop / 2) / perimeter) * 360 : 0;
+
   const tickPathLength = 360;
   const minorDash = "0.4 5.6";   // 60 minor ticks (every 6° equivalent)
   const majorDash = "1.4 28.6";  // 12 major ticks (every 30° equivalent)
-  const rotation =
-    typeof heading === "number" && Number.isFinite(heading) ? -heading : 0;
+  const nDash     = "3 357";     // single 3-unit red dash for North
+
+  // Heading is clockwise from north. Stroke-dashoffset positive shifts the
+  // pattern *backward* along the path — opposite to the path direction.
+  // Path is drawn clockwise, so positive dashoffset moves dashes CCW on
+  // the bezel, which is exactly the direction we want when the device
+  // turns clockwise.
+  const h = typeof heading === "number" && Number.isFinite(heading) ? heading : 0;
+  const minorOffset = h;
+  const majorOffset = h;
+  // Anchor: at h=0, the dash should sit at top-centre → place the dash
+  // pattern so its first dash starts `topCenterUnits` into the path.
+  const nOffset = h - topCenterUnits;
 
   return (
-    <div
-      ref={ref}
-      className="compass-ring"
-      style={{ transform: `rotate(${rotation}deg)` }}
-      aria-hidden="true"
-    >
+    <div ref={ref} className="compass-ring" aria-hidden="true">
       <svg
         width="100%"
         height="100%"
@@ -80,8 +93,8 @@ export function CompassRing({ heading }: { heading?: number | null }) {
         preserveAspectRatio="none"
       >
         <defs>
-          {/* Subtle metallic gradient — top + bottom slightly lifted so the
-              bezel reads as turned steel rather than flat ink. */}
+          {/* Subtle metallic gradient on the band — top + bottom slightly
+              lifted so the bezel reads as turned steel rather than ink. */}
           <linearGradient id="cr-band" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%"   stopColor="#1a1a1a" />
             <stop offset="50%"  stopColor="#070707" />
@@ -89,45 +102,52 @@ export function CompassRing({ heading }: { heading?: number | null }) {
           </linearGradient>
         </defs>
 
-        {/* Solid metallic band. */}
+        {/* Static metallic band — no animation. */}
         <rect
           x={x} y={y} width={cw} height={ch} rx={pathRadius}
           fill="none"
           stroke="url(#cr-band)"
           strokeWidth={bandWidth}
         />
-        {/* Inner highlight — hairline white at very low opacity, gives the
-            bezel a turned-edge feel. */}
+        {/* Inner highlight — hairline white at very low opacity. */}
         <rect
           x={x} y={y} width={cw} height={ch} rx={pathRadius}
           fill="none"
           stroke="rgba(255,255,255,0.08)"
           strokeWidth={bandWidth - 1}
         />
-        {/* Minor ticks. */}
+        {/* Minor ticks — slide CCW along the path as heading increases. */}
         <rect
           x={x} y={y} width={cw} height={ch} rx={pathRadius}
           fill="none"
           stroke="rgba(255,255,255,0.55)"
           strokeWidth={bandWidth * 0.5}
           strokeDasharray={minorDash}
+          strokeDashoffset={minorOffset}
           pathLength={tickPathLength}
         />
-        {/* Major ticks at the 12 cardinal/30° slots, with the first dash
-            anchored on the top edge so it lines up with the red North. */}
+        {/* Major ticks — same direction, slightly thicker. */}
         <rect
           x={x} y={y} width={cw} height={ch} rx={pathRadius}
           fill="none"
           stroke="#ffffff"
           strokeWidth={bandWidth}
           strokeDasharray={majorDash}
-          strokeDashoffset={-0.7}
+          strokeDashoffset={majorOffset}
+          pathLength={tickPathLength}
+        />
+        {/* Red North marker — single 3-unit dash, anchored to top-centre at
+            heading=0 and shifted by heading so it always points north. */}
+        <rect
+          x={x} y={y} width={cw} height={ch} rx={pathRadius}
+          fill="none"
+          stroke="#e8443b"
+          strokeWidth={bandWidth}
+          strokeDasharray={nDash}
+          strokeDashoffset={nOffset}
           pathLength={tickPathLength}
         />
       </svg>
-      {/* Red North triangle — sits on the top edge of the band and replaces
-          the white major tick visually so true north is unmistakable. */}
-      <span className="cr-north" />
     </div>
   );
 }
