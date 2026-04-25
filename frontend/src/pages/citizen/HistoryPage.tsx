@@ -8,7 +8,9 @@ import {
   IconFilter,
   IconTriangle,
 } from "../../components/icons/Icons";
-import { formatRelative, NOTIFICATIONS, STAGE_COLORS, STAGES, type StageNum } from "../../lib/demo";
+import { formatRelative, NOTIFICATIONS, DROUGHT_NOTIFICATIONS, STAGE_COLORS, type StageNum } from "../../lib/demo";
+import { useAlert } from "../../state/AlertContext";
+import type { DisasterModule } from "../../lib/disaster-types";
 
 type Tab = "all" | "active" | "cleared";
 type TimeRange = "hour" | "day" | "week" | "all";
@@ -22,6 +24,7 @@ const TIME_RANGES: { key: TimeRange; label: string; minutes: number }[] = [
 
 export function HistoryPage() {
   const navigate = useNavigate();
+  const { activeModule } = useAlert();
   const [tab, setTab] = useState<Tab>("all");
   const [stageFilter, setStageFilter] = useState<StageNum[]>([]);
   const [timeRange, setTimeRange] = useState<TimeRange>("all");
@@ -31,7 +34,9 @@ export function HistoryPage() {
 
   const rangeMinutes = TIME_RANGES.find((r) => r.key === timeRange)!.minutes;
 
-  const visible = NOTIFICATIONS.filter((n) => {
+  const notifications = activeModule.id === "drought" ? DROUGHT_NOTIFICATIONS : NOTIFICATIONS;
+
+  const visible = notifications.filter((n) => {
     if (tab === "active" && n.stage < 3) return false;
     if (tab === "cleared" && n.stage >= 3) return false;
     if (stageFilter.length > 0 && !stageFilter.includes(n.stage)) return false;
@@ -207,6 +212,7 @@ export function HistoryPage() {
           timeRange={timeRange}
           setTimeRange={setTimeRange}
           onClose={() => setShowFilter(false)}
+          activeModule={activeModule}
         />
       )}
     </div>
@@ -219,12 +225,14 @@ function FilterSheet({
   timeRange,
   setTimeRange,
   onClose,
+  activeModule,
 }: {
   stageFilter: StageNum[];
   setStageFilter: (v: StageNum[]) => void;
   timeRange: TimeRange;
   setTimeRange: (v: TimeRange) => void;
   onClose: () => void;
+  activeModule: DisasterModule;
 }) {
   // Local draft state so changes only apply on "Apply"
   const [draftStages, setDraftStages] = useState<StageNum[]>(stageFilter);
@@ -290,7 +298,7 @@ function FilterSheet({
         {/* Stage filter */}
         <div className="eyebrow" style={{ marginBottom: 10 }}>Severity</div>
         <div style={{ display: "flex", gap: 7, marginBottom: 20, flexWrap: "wrap" }}>
-          {STAGES.map((s) => {
+          {activeModule.stages.map((s) => {
             const active = draftStages.includes(s.n as StageNum);
             return (
               <button

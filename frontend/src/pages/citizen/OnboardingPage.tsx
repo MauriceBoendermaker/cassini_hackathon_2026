@@ -215,11 +215,11 @@ function ObNotifications() {
 }
 
 function ObReady() {
-  const { userPlaceName, userCountry } = useAlert();
-  const place = userPlaceName ?? "Quart de Poblet";
+  const { userPlaceName, userCountry, userPosition } = useAlert();
+  const place = userPlaceName ?? (userPosition ? "Your area" : "—");
   const sub = userPlaceName
-    ? userCountry ?? "Your area"
-    : "València, ES · Túria basin";
+    ? userCountry ?? "—"
+    : userPosition ? "Locating…" : "Enable location for live alerts";
   return (
     <div>
       <div

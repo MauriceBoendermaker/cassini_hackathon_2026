@@ -1,6 +1,7 @@
+import { useAlert } from "../../../state/AlertContext";
 import { useSettings } from "../../../state/SettingsContext";
 import { IconClose } from "../../../components/icons/Icons";
-import { STAGES, STAGE_COLORS, type StageNum } from "../../../lib/demo";
+import { STAGE_COLORS, type StageNum } from "../../../lib/demo";
 
 function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
   return (
@@ -41,6 +42,7 @@ function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
 
 export function AlertTiersSheet({ onClose }: { onClose: () => void }) {
   const { alertTiers, setAlertTiers, alertTiersDND, setAlertTiersDND } = useSettings();
+  const { activeModule } = useAlert();
 
   function toggleTier(i: number) {
     const next = [...alertTiers];
@@ -62,7 +64,7 @@ export function AlertTiersSheet({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
-        {STAGES.map((s, i) => (
+        {activeModule.stages.map((s, i) => (
           <div
             key={s.n}
             style={{
@@ -82,7 +84,7 @@ export function AlertTiersSheet({ onClose }: { onClose: () => void }) {
               </svg>
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 14.5, fontWeight: 500 }}>Stage {s.n}</div>
+              <div style={{ fontSize: 14.5, fontWeight: 500 }}>{s.short}</div>
               <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2 }}>
                 {s.label}
               </div>

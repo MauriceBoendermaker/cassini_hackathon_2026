@@ -2,7 +2,7 @@ import { useAlert } from "../../state/AlertContext";
 import { VALENCIA } from "../../lib/demo";
 
 export function ScenarioRibbon() {
-  const { scenarioT, scenarioPlaying, currentEvent, setScenarioPlaying, setScenarioT } = useAlert();
+  const { scenarioT, scenarioPlaying, currentEvent, setScenarioPlaying, setScenarioT, activeModule } = useAlert();
 
   return (
     <div
@@ -60,7 +60,7 @@ export function ScenarioRibbon() {
               opacity: 0.7,
             }}
           >
-            VALENCIA · 29 OCT 2024
+            {activeModule.id === "drought" ? `${activeModule.name.toUpperCase()} · DEMO SCENARIO` : "VALENCIA · 29 OCT 2024"}
           </div>
           <div
             style={{

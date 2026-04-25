@@ -8,7 +8,7 @@ export function AlertAreaSheet({ onClose }: { onClose: () => void }) {
   const { alertRadiusKm, setAlertRadiusKm } = useSettings();
   const { userPlaceName, userPosition, userCountry } = useAlert();
 
-  const placeName = userPlaceName ?? "Quart de Poblet";
+  const placeName = userPlaceName ?? (userPosition ? "Your area" : "—");
   const coords = userPosition
     ? `${Math.abs(userPosition.lat).toFixed(4)}° ${userPosition.lat >= 0 ? "N" : "S"} · ${Math.abs(userPosition.lng).toFixed(4)}° ${userPosition.lng >= 0 ? "E" : "W"}${userCountry ? ` · ${userCountry}` : ""}`
     : "39.4699° N · 0.4510° W · ES";

@@ -1,29 +1,31 @@
 import { useNavigate } from "react-router-dom";
 import { AppBar } from "../../components/layout/AppBar";
+import { useAlert } from "../../state/AlertContext";
 import { AegisLogo } from "../../components/brand/AegisLogo";
 import { StageBadge } from "../../components/ui/StageBadge";
 import {
   IconChevronL,
   IconDrop,
+  IconLayers,
   IconMapPin,
   IconSatellite,
   IconShield,
 } from "../../components/icons/Icons";
-import { STAGES } from "../../lib/demo";
 
 export function AboutPage() {
   const navigate = useNavigate();
+  const { activeModule } = useAlert();
 
   const sources = [
     {
       Ic: IconSatellite,
-      t: "Copernicus EMS",
-      s: "Sentinel-1 SAR flood extent · Sentinel-2 optical · DEM + EFAS forecasts",
+      t: "Copernicus EMS + C3S",
+      s: "Sentinel-1 SAR flood extent · Sentinel-2 NDVI · C3S soil moisture · EFAS · DEM",
     },
     {
       Ic: IconMapPin,
-      t: "Galileo HAS + SAR",
-      s: "Decimetre positioning + Galileo Search & Rescue Service for SOS",
+      t: "Galileo HAS + EGNOS",
+      s: "Decimetre positioning · Galileo SAR for SOS · EGNOS precision agriculture",
     },
     {
       Ic: IconShield,
@@ -32,8 +34,13 @@ export function AboutPage() {
     },
     {
       Ic: IconDrop,
-      t: "Hydrology models",
-      s: "EFAS · GloFAS · local SCH river-gauge networks",
+      t: "Hydrology & climate models",
+      s: "EFAS · GloFAS · CDS ERA5 · local river-gauge networks",
+    },
+    {
+      Ic: IconLayers,
+      t: "AegisModule Standard",
+      s: "Open disaster module format — flood, drought, wildfire, storm, heatwave",
     },
   ];
 
@@ -73,15 +80,16 @@ export function AboutPage() {
                 marginTop: 4,
               }}
             >
-              EU FLOOD ALERT · v1.0
+              EU MULTI-HAZARD · v1.0
             </div>
           </div>
         </div>
 
         <p className="h-sub" style={{ marginTop: 18, lineHeight: 1.6 }}>
-          Aegis is a citizen alert and rescue coordination platform built on European space
-          infrastructure. It turns raw Copernicus EMS observations into clear, staged alerts
-          your community can act on — even when terrestrial networks fail.
+          Aegis is a <strong>multi-hazard citizen alert and rescue coordination platform</strong>{" "}
+          built on European space infrastructure. It turns raw Copernicus satellite observations
+          into clear, staged alerts your community can act on — even when terrestrial networks
+          fail. Flood, drought, wildfire, storm: one platform, any hazard.
         </p>
 
         <div className="eyebrow" style={{ marginTop: 22, marginBottom: 10 }}>Data sources</div>
@@ -128,9 +136,11 @@ export function AboutPage() {
           ))}
         </div>
 
-        <div className="eyebrow" style={{ marginTop: 22, marginBottom: 10 }}>EFAS stage scale</div>
+        <div className="eyebrow" style={{ marginTop: 22, marginBottom: 10 }}>
+          {activeModule.name} alert scale
+        </div>
         <div className="card" style={{ padding: "4px 14px" }}>
-          {STAGES.map((s) => (
+          {activeModule.stages.map((s) => (
             <div
               key={s.n}
               style={{
@@ -140,7 +150,7 @@ export function AboutPage() {
                 borderBottom: s.n < 5 ? "1px solid var(--line)" : "none",
               }}
             >
-              <StageBadge n={s.n} size="sm" />
+              <StageBadge n={s.n} size="sm" short={s.short} label={s.label} />
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13.5, fontWeight: 500 }}>{s.headline}</div>
                 <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2 }}>{s.blurb}</div>

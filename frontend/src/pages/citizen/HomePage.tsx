@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAlert } from "../../state/AlertContext";
 import { useSettings } from "../../state/SettingsContext";
@@ -12,23 +13,42 @@ import {
   IconTriangle,
   IconWifiOff,
 } from "../../components/icons/Icons";
-import { formatRelative, getStage, NOTIFICATIONS, STAGE_COLORS } from "../../lib/demo";
+import { formatRelative, NOTIFICATIONS, DROUGHT_NOTIFICATIONS, STAGE_COLORS } from "../../lib/demo";
 import { stageHeadline, t } from "../../lib/i18n";
+import { useWeather } from "../../lib/useWeather";
+
+function nextEfasCountdown(): string {
+  const now = new Date();
+  const secsPastHour = now.getUTCMinutes() * 60 + now.getUTCSeconds();
+  const secsInto6h = ((now.getUTCHours() % 6) * 3600) + secsPastHour;
+  const remaining = 6 * 3600 - secsInto6h;
+  const h = Math.floor(remaining / 3600);
+  const m = Math.floor((remaining % 3600) / 60);
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
 
 export function HomePage() {
-  const { effectiveStage, userPosition, userPlaceName, userCountry } = useAlert();
+  const { effectiveStage, userPosition, userPlaceName, userCountry, activeModule } = useAlert();
   const { online, previewLang } = useSettings();
   const navigate = useNavigate();
+  // Fall back to Valencia coords so weather always loads even before GPS resolves.
+  const weather = useWeather(userPosition?.lat ?? 39.4699, userPosition?.lng ?? -0.3763);
+
+  const [countdown, setCountdown] = useState(nextEfasCountdown);
+  useEffect(() => {
+    const id = setInterval(() => setCountdown(nextEfasCountdown()), 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   const stage = effectiveStage;
-  const s = getStage(stage);
-  const headline = stageHeadline(previewLang, stage);
+  const s = activeModule.stages[stage - 1];
+  const headline = activeModule.id === "flood" ? stageHeadline(previewLang, stage) : s.headline;
   const isCritical = stage >= 4;
 
-  // Real place name if reverse geocoding resolved; otherwise "Your area" if
-  // geolocation at least succeeded; last resort the Valencia demo anchor.
-  const placeName =
-    userPlaceName ?? (userPosition ? "Your area" : "Quart de Poblet");
+  const notifications = activeModule.id === "drought" ? DROUGHT_NOTIFICATIONS : NOTIFICATIONS;
+
+  // Real place name from GPS reverse-geocoding; blank until resolved.
+  const placeName = userPlaceName ?? (userPosition ? "Your area" : "—");
   void userCountry;
 
   return (
@@ -117,7 +137,7 @@ export function HomePage() {
               fontFamily: "var(--font-mono)",
             }}
           >
-            <span>NEXT UPDATE · 04:32</span>
+            <span>NEXT UPDATE · {countdown}</span>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
               {t(previewLang, "seeAlert")} <IconChevronR size={12} />
             </span>
@@ -125,7 +145,7 @@ export function HomePage() {
         </div>
 
         {/* Critical action card */}
-        {isCritical && (
+        {isCritical && activeModule.evacuationType === "route" && (
           <button
             onClick={() => navigate("/evacuation")}
             style={{
@@ -177,20 +197,22 @@ export function HomePage() {
         {/* Live signals */}
         <div className="eyebrow" style={{ marginTop: 22, marginBottom: 10 }}>Live signals</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          <Stat
-            label="Rainfall · 1h"
-            value={stage >= 3 ? "38" : "4"}
-            unit="mm"
-            tone={stage >= 3 ? "warn" : ""}
-          />
-          <Stat
-            label="River level"
-            value={stage >= 3 ? "+2.4" : "+0.3"}
-            unit="m"
-            tone={stage >= 4 ? "danger" : stage >= 3 ? "warn" : ""}
-          />
-          <Stat label="Wind gusts" value="64" unit="km/h" />
-          <Stat label="Sentinel-1" value="07m" unit="ago" />
+          {activeModule.metrics.map((m) => {
+            let value = m.value(stage);
+            if (weather) {
+              if (m.label.startsWith("Rainfall")) value = String(weather.precipitation1h);
+              if (m.label.startsWith("Wind"))     value = String(weather.windGusts);
+            }
+            return (
+              <Stat
+                key={m.label}
+                label={m.label}
+                value={value}
+                unit={m.unit}
+                tone={m.tone(stage)}
+              />
+            );
+          })}
         </div>
 
         {/* Map preview */}
@@ -243,7 +265,11 @@ export function HomePage() {
                 letterSpacing: "0.06em",
               }}
             >
-              túria basin · 11.5 km radius
+              {activeModule.id === "drought"
+                ? "drought risk zones · c3s"
+                : userPlaceName
+                  ? `${userPlaceName.toLowerCase()} · live area`
+                  : "túria basin · 11.5 km radius"}
             </div>
           </div>
           <div
@@ -257,7 +283,7 @@ export function HomePage() {
             <div>
               <div style={{ fontSize: 14, fontWeight: 600 }}>{t(previewLang, "viewMap")}</div>
               <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2 }}>
-                Flood overlays · SOS pins · evacuation routes
+                {activeModule.mapLabel}
               </div>
             </div>
             <IconChevronR size={18} style={{ color: "var(--ink-3)" }} />
@@ -268,7 +294,7 @@ export function HomePage() {
         <div className="eyebrow" style={{ marginTop: 22, marginBottom: 6 }}>Recent alerts</div>
         <div className="card" style={{ padding: "4px 14px" }}>
           <div className="list">
-            {NOTIFICATIONS.slice(0, 3).map((n) => (
+            {notifications.slice(0, 3).map((n) => (
               <div key={n.id} className="list-row" onClick={() => navigate("/history")}>
                 <div
                   className="lr-icon"

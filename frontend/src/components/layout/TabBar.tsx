@@ -3,7 +3,7 @@ import {
   IconHome,
   IconMap,
   IconLightning,
-  IconBell,
+  IconLayers,
   IconSettings,
   IconUsers,
   IconPhone,
@@ -20,11 +20,11 @@ type TabItem = {
 
 function citizenTabs(): TabItem[] {
   return [
-    { k: "home",     label: "Home",    to: "/",         Icon: IconHome },
-    { k: "map",      label: "Map",     to: "/map",      Icon: IconMap },
-    { k: "sos",      label: "SOS",     to: "/sos",      Icon: IconLightning, sos: true },
-    { k: "history",  label: "Alerts",  to: "/history",  Icon: IconBell },
-    { k: "settings", label: "More",    to: "/settings", Icon: IconSettings },
+    { k: "home",    label: "Home",    to: "/",        Icon: IconHome },
+    { k: "map",     label: "Map",     to: "/map",     Icon: IconMap },
+    { k: "sos",     label: "SOS",     to: "/sos",     Icon: IconLightning, sos: true },
+    { k: "modules", label: "Modules", to: "/modules", Icon: IconLayers },
+    { k: "settings",label: "More",    to: "/settings",Icon: IconSettings },
   ];
 }
 

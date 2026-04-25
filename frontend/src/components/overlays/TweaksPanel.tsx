@@ -4,6 +4,7 @@ import { useAlert } from "../../state/AlertContext";
 import { useSettings } from "../../state/SettingsContext";
 import { STAGE_COLORS, type StageNum } from "../../lib/demo";
 import { DEMO_LANGS } from "../../lib/i18n";
+import { ACTIVE_MODULES } from "../../lib/disaster-types";
 import "./TweaksPanel.css";
 
 /**
@@ -32,6 +33,7 @@ const SCREENS = [
   { value: "/history",     label: "history" },
   { value: "/settings",    label: "settings" },
   { value: "/about",       label: "about" },
+  { value: "/modules",     label: "modules" },
 ];
 
 /**
@@ -53,6 +55,8 @@ export function TweaksPanel() {
     showPush,
     showInstall,
     resetScenario,
+    activeModule,
+    setActiveModule,
   } = useAlert();
   const {
     online,
@@ -109,6 +113,21 @@ export function TweaksPanel() {
               </button>
             );
           })}
+        </div>
+
+        <div className="twk-sect">Hazard module</div>
+        <div className="twk-row">
+          <div className="twk-seg-fixed">
+            {ACTIVE_MODULES.map((mod) => (
+              <button
+                key={mod.id}
+                className={activeModule.id === mod.id ? "active" : ""}
+                onClick={() => setActiveModule(mod)}
+              >
+                {mod.name.toLowerCase()}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="twk-sect">Scenario</div>

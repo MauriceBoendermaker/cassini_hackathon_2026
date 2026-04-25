@@ -72,9 +72,6 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
   }
   .app-stage { padding: 0; background: var(--bg); }
   .app-frame { border-radius: 0; box-shadow: none; max-width: 100%; }
-  /* Kill the fake iOS chrome — the OS provides its own. */
-  .status-bar { display: none; }
-  .home-indicator { display: none; }
   /* Push our own chrome inside the device safe areas. */
   .app-bar { padding-top: max(6px, env(safe-area-inset-top)); }
   .offline-bar { padding-top: max(4px, env(safe-area-inset-top)); }
@@ -152,6 +149,13 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
 }
 .app-viewport[data-stage="4"] .home-indicator i,
 .app-viewport[data-stage="5"] .home-indicator i { background: rgba(255,255,255,.9); }
+
+/* Kill the fake status bar + home indicator on real devices — placed here,
+ * after the base display:flex declarations, so this wins the cascade. */
+@media (max-width: 520px), (display-mode: standalone), (pointer: coarse) {
+  .status-bar { display: none; }
+  .home-indicator { display: none; }
+}
 
 /* ============================================================
    Top app bar

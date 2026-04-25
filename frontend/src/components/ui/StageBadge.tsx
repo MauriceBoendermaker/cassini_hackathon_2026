@@ -3,11 +3,15 @@ import { getStage, STAGE_COLORS, type StageNum } from "../../lib/demo";
 type Props = {
   n: StageNum;
   size?: "sm" | "md";
+  short?: string;
+  label?: string;
 };
 
-export function StageBadge({ n, size = "md" }: Props) {
+export function StageBadge({ n, size = "md", short, label }: Props) {
   const s = getStage(n);
   const c = STAGE_COLORS[n];
+  const displayShort = short ?? s.short;
+  const displayLabel = label ?? s.label;
   return (
     <span
       className="chip mono"
@@ -20,7 +24,7 @@ export function StageBadge({ n, size = "md" }: Props) {
         fontWeight: 600,
       }}
     >
-      {s.short} · {s.label.toUpperCase()}
+      {displayShort} · {displayLabel.toUpperCase()}
     </span>
   );
 }
