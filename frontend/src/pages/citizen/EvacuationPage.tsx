@@ -16,7 +16,7 @@ const STEPS = [
   { dist: "60 m",  title: "Right onto C/ Major",  sub: "Avoid the underpass on your left" },
   { dist: "180 m", title: "Cross at footbridge",  sub: "Footbridge is above flood line" },
   { dist: "320 m", title: "Up Avgda Constitució", sub: "Steady incline, well lit" },
-  { dist: "420 m", title: "Assembly Point B",     sub: "Plaça Major · school gym" },
+  { dist: "420 m", title: "Assembly Point B",     sub: "Marktplein · sporthal" },
 ];
 
 export function EvacuationPage() {
@@ -147,7 +147,7 @@ export function EvacuationPage() {
             <div className="eyebrow" style={{ color: "rgba(255,255,255,.7)" }}>
               RECOMMENDED ROUTE
             </div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginTop: 6 }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginTop: 6 }}>
               <div
                 style={{
                   fontSize: 36,
@@ -156,9 +156,9 @@ export function EvacuationPage() {
                   fontFamily: "var(--font-mono)",
                 }}
               >
-                420 m
+                6 min walk
               </div>
-              <div style={{ fontSize: 13, opacity: 0.8 }}>· 6 min walk</div>
+              <div style={{ fontSize: 12, opacity: 0.75, fontFamily: "var(--font-mono)" }}>· 420 m</div>
             </div>
             <div
               style={{
@@ -274,7 +274,7 @@ export function EvacuationPage() {
                 style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
               >
                 <div>
-                  <div style={{ fontSize: 15, fontWeight: 600 }}>Plaça Major school gym</div>
+                  <div style={{ fontSize: 15, fontWeight: 600 }}>Marktplein sporthal</div>
                   <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2 }}>
                     Capacity 280 · Open 24h
                   </div>
