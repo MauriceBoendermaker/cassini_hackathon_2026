@@ -44,5 +44,17 @@ export default defineConfig({
       },
     }),
   ],
-  server: { port: 5173, open: true, host: true },
+  server: {
+    port: 5173,
+    open: true,
+    host: true,
+    headers: {
+      "Content-Security-Policy":
+        "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.tile.openstreetmap.org; connect-src 'self' ws://localhost:5173; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';",
+      "X-Frame-Options": "DENY",
+      "X-Content-Type-Options": "nosniff",
+      "Referrer-Policy": "strict-origin-when-cross-origin",
+      "Permissions-Policy": "geolocation=(self), camera=(), microphone=(), payment=(), usb=()",
+    },
+  },
 });
