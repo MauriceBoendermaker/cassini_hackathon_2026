@@ -17,7 +17,7 @@ import {
 import { FLOOD_LAYERS, SOS_PINS, FF_UNITS, VALENCIA } from "../../lib/demo";
 
 export function MapPage() {
-  const { effectiveStage } = useAlert();
+  const { effectiveStage, userPosition, userPlaceName } = useAlert();
   const { online, role } = useSettings();
   const navigate = useNavigate();
 
@@ -27,15 +27,25 @@ export function MapPage() {
 
   useEffect(() => {
     if (!mapEl.current || mapRef.current) return;
+    const center: [number, number] = userPosition
+      ? [userPosition.lat, userPosition.lng]
+      : VALENCIA.center;
     const map = L.map(mapEl.current, {
-      center: VALENCIA.center,
-      zoom: VALENCIA.zoom,
+      center,
+      zoom: userPosition ? 13 : VALENCIA.zoom,
       zoomControl: false,
       attributionControl: false,
     });
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
     mapRef.current = map;
-  }, []);
+  }, [userPosition]);
+
+  // When the user's position arrives after the map is mounted, recenter.
+  useEffect(() => {
+    if (mapRef.current && userPosition) {
+      mapRef.current.setView([userPosition.lat, userPosition.lng], 13);
+    }
+  }, [userPosition]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -66,7 +76,10 @@ export function MapPage() {
       iconSize: [16, 16],
       iconAnchor: [8, 8],
     });
-    layersRef.current.push(L.marker(VALENCIA.user, { icon: userIcon }).addTo(map));
+    const userLatLng: [number, number] = userPosition
+      ? [userPosition.lat, userPosition.lng]
+      : VALENCIA.user;
+    layersRef.current.push(L.marker(userLatLng, { icon: userIcon }).addTo(map));
 
     if ((role === "firefighter" && effectiveStage >= 4) || effectiveStage >= 5) {
       SOS_PINS.forEach((p) => {
@@ -95,14 +108,16 @@ export function MapPage() {
     }
   }, [effectiveStage, role]);
 
+  const locSuffix = userPlaceName ? ` · ${userPlaceName}` : "";
   const stageHeadline =
     effectiveStage <= 2
       ? "No active flooding"
       : effectiveStage === 3
-        ? "Localised flooding · Túria"
+        ? `Localised flooding${locSuffix}`
         : effectiveStage === 4
-          ? "Severe flooding · Poyo ravine"
-          : "Evacuation in red zone";
+          ? "Severe flooding reported"
+          : "Evacuation in effect";
+  const mapTitle = userPlaceName ?? "Túria basin";
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
@@ -114,7 +129,7 @@ export function MapPage() {
       )}
       <AppBar
         sub="LIVE FLOOD MAP"
-        title="Túria basin"
+        title={mapTitle}
         left={
           <button className="icon-btn" onClick={() => navigate("/")} aria-label="Back">
             <IconChevronL size={18} />
@@ -137,7 +152,12 @@ export function MapPage() {
           </button>
           <button
             className="icon-btn"
-            onClick={() => mapRef.current?.setView(VALENCIA.user, 14)}
+            onClick={() => {
+              const target: [number, number] = userPosition
+                ? [userPosition.lat, userPosition.lng]
+                : VALENCIA.user;
+              mapRef.current?.setView(target, 14);
+            }}
             aria-label="Centre on me"
           >
             <IconCrosshair size={16} />

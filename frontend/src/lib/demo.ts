@@ -146,27 +146,43 @@ export const FF_UNITS: FFUnit[] = [
 
 export type AegisNotification = {
   id: string;
-  t: string;       // HH:mm
-  date: string;    // 29 Oct
+  /** Minutes before "now" (page load) when this notification was issued.
+   * Renders via `formatRelative` so the demo always looks current. */
+  minutesAgo: number;
   stage: StageNum;
   title: string;
   body: string;
 };
 
 export const NOTIFICATIONS: AegisNotification[] = [
-  { id: "n1", t: "14:08", date: "29 Oct", stage: 5, title: "Evacuation order — Quart de Poblet",
+  { id: "n1", minutesAgo: 12,      stage: 5, title: "Evacuation order issued",
     body: "Mandatory evacuation. Move to designated assembly point now. Follow blue route." },
-  { id: "n2", t: "13:42", date: "29 Oct", stage: 4, title: "Severe flood warning — Poyo ravine",
+  { id: "n2", minutesAgo: 38,      stage: 4, title: "Severe flood warning",
     body: "Flash flood imminent. Move to upper floors. Avoid basements and underpasses." },
-  { id: "n3", t: "09:15", date: "29 Oct", stage: 3, title: "Flood warning — Túria basin",
+  { id: "n3", minutesAgo: 60 * 5,  stage: 3, title: "Flood warning",
     body: "Localised flooding likely within 6–12 hours. Prepare to move." },
-  { id: "n4", t: "04:00", date: "29 Oct", stage: 2, title: "Watch in effect",
+  { id: "n4", minutesAgo: 60 * 10, stage: 2, title: "Watch in effect",
     body: "80–120 mm rainfall forecast over 12h. Stay informed." },
-  { id: "n5", t: "21:10", date: "12 Oct", stage: 2, title: "Watch in effect — Júcar river",
-    body: "Routine watch issued for upstream rainfall." },
-  { id: "n6", t: "08:30", date: "03 Oct", stage: 1, title: "System update",
+  { id: "n5", minutesAgo: 60 * 30, stage: 2, title: "Watch issued — upstream",
+    body: "Routine watch for upstream rainfall." },
+  { id: "n6", minutesAgo: 60 * 24 * 7, stage: 1, title: "System update",
     body: "Aegis offline cache refreshed via Galileo broadcast." },
 ];
+
+/** Format a minutes-ago value as a compact relative-time string. */
+export function formatRelative(minutes: number): string {
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${Math.round(minutes)}m ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.round(hours / 24);
+  if (days === 1) return "yesterday";
+  if (days < 7) return `${days}d ago`;
+  const weeks = Math.round(days / 7);
+  if (weeks < 5) return `${weeks}w ago`;
+  const months = Math.round(days / 30);
+  return `${months}mo ago`;
+}
 
 // 24 EU official languages.
 export type EuLang = { code: string; name: string; en: string };

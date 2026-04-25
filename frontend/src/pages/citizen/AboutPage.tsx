@@ -28,7 +28,7 @@ export function AboutPage() {
     {
       Ic: IconShield,
       t: "Civil Protection feeds",
-      s: "NL-Alert, AEMET, Generalitat Valenciana, ECHO ERCC",
+      s: "NL-Alert · DWD · Météo-France · AEMET · ECHO ERCC",
     },
     {
       Ic: IconDrop,

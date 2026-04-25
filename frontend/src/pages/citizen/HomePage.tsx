@@ -12,11 +12,11 @@ import {
   IconTriangle,
   IconWifiOff,
 } from "../../components/icons/Icons";
-import { getStage, NOTIFICATIONS, STAGE_COLORS } from "../../lib/demo";
+import { formatRelative, getStage, NOTIFICATIONS, STAGE_COLORS } from "../../lib/demo";
 import { stageHeadline, t } from "../../lib/i18n";
 
 export function HomePage() {
-  const { effectiveStage } = useAlert();
+  const { effectiveStage, userPosition, userPlaceName, userCountry } = useAlert();
   const { online, previewLang } = useSettings();
   const navigate = useNavigate();
 
@@ -24,6 +24,12 @@ export function HomePage() {
   const s = getStage(stage);
   const headline = stageHeadline(previewLang, stage);
   const isCritical = stage >= 4;
+
+  // Real place name if reverse geocoding resolved; otherwise "Your area" if
+  // geolocation at least succeeded; last resort the Valencia demo anchor.
+  const placeName =
+    userPlaceName ?? (userPosition ? "Your area" : "Quart de Poblet");
+  void userCountry;
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "var(--bg)" }}>
@@ -35,7 +41,7 @@ export function HomePage() {
       )}
       <AppBar
         sub={online ? "LIVE · COPERNICUS EMS" : "OFFLINE · CACHED"}
-        title="Quart de Poblet"
+        title={placeName}
         left={
           <button className="icon-btn ghost" aria-label="Aegis">
             <AegisLogo size={26} color="var(--brand)" />
@@ -178,7 +184,7 @@ export function HomePage() {
             tone={stage >= 3 ? "warn" : ""}
           />
           <Stat
-            label="Túria level"
+            label="River level"
             value={stage >= 3 ? "+2.4" : "+0.3"}
             unit="m"
             tone={stage >= 4 ? "danger" : stage >= 3 ? "warn" : ""}
@@ -277,7 +283,7 @@ export function HomePage() {
                   <div className="lr-title">{n.title}</div>
                   <div className="lr-sub">{n.body.slice(0, 60)}…</div>
                 </div>
-                <div className="lr-meta">{n.t}</div>
+                <div className="lr-meta">{formatRelative(n.minutesAgo)}</div>
               </div>
             ))}
           </div>

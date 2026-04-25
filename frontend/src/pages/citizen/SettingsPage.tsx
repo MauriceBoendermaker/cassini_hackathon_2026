@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAlert } from "../../state/AlertContext";
 import { useSettings } from "../../state/SettingsContext";
 import { AppBar } from "../../components/layout/AppBar";
 import { AegisLogo } from "../../components/brand/AegisLogo";
@@ -25,9 +26,25 @@ import { EU_LANGUAGES } from "../../lib/demo";
 export function SettingsPage() {
   const navigate = useNavigate();
   const { language, setLanguage, dark, setDark, online, setOnline, role, setRole } = useSettings();
+  const { userPlaceName, userCountry, userPosition, requestLocation } = useAlert();
   const [showLang, setShowLang] = useState(false);
 
   const cur = EU_LANGUAGES.find((l) => l.code === language) ?? EU_LANGUAGES[5];
+  const profileLine = userPlaceName
+    ? `${userPlaceName} · ${userCountry ?? ""}`.trim().replace(/·\s*$/, "").toUpperCase()
+    : userPosition
+      ? "YOUR AREA"
+      : "QUART DE POBLET · ES";
+  const areaLine = userPlaceName
+    ? `5 km radius · ${userPlaceName}`
+    : userPosition
+      ? "5 km radius · your area"
+      : "5 km radius · Quart de Poblet";
+  const locationSub = userPlaceName
+    ? `Sharing ${userPlaceName}${userCountry ? `, ${userCountry}` : ""}`
+    : userPosition
+      ? `${userPosition.lat.toFixed(3)}°, ${userPosition.lng.toFixed(3)}°`
+      : "Not shared — tap to enable";
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
@@ -66,7 +83,7 @@ export function SettingsPage() {
                 marginTop: 2,
               }}
             >
-              QUART DE POBLET · ES
+              {profileLine}
             </div>
           </div>
           <IconChevronR size={18} />
@@ -122,9 +139,17 @@ export function SettingsPage() {
         <div className="eyebrow" style={{ marginTop: 22, marginBottom: 6 }}>Alerts</div>
         <div className="card" style={{ padding: "4px 14px" }}>
           <div className="list">
+            <div className="list-row" onClick={() => void requestLocation()}>
+              <div className="lr-icon"><IconMapPin size={18} /></div>
+              <div className="lr-body">
+                <div className="lr-title">Use my location</div>
+                <div className="lr-sub">{locationSub}</div>
+              </div>
+              <IconChevronR size={16} style={{ color: "var(--ink-3)" }} />
+            </div>
             {[
               { Ic: IconBell, t: "Alert tiers",         s: "EFAS 1–5 enabled · critical breaks DND" },
-              { Ic: IconMapPin, t: "Alert area",        s: "5 km radius · Quart de Poblet" },
+              { Ic: IconMapPin, t: "Alert area",        s: areaLine },
               { Ic: IconHand, t: "Vulnerable household", s: "Add household members for triage" },
               { Ic: IconPhone, t: "Emergency contacts",  s: "2 contacts · 112 + family" },
             ].map((r, i) => (

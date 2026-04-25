@@ -2,6 +2,10 @@
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; height: 100%; }
+html {
+  -webkit-text-size-adjust: 100%;    /* stop iOS rotating-to-landscape auto-font-inflate */
+  text-size-adjust: 100%;
+}
 
 body {
   background: #1a1f2e;            /* device-dressing area when desktop */
@@ -10,9 +14,13 @@ body {
   font-feature-settings: "ss01","cv11";
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* No document-level scroll — only the inner .scroll container scrolls.
+   * Keeps the tab bar pinned to the viewport bottom on all devices. */
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
-#root { min-height: 100%; }
+#root { height: 100%; }
 
 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
 button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
@@ -23,7 +31,11 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
 
 .app-stage {
   position: relative;
-  min-height: 100dvh;
+  /* Lock to exact viewport height so the frame can't grow beyond it.
+   * `dvh` shrinks when the mobile address bar or keyboard is visible.
+   * `100vh` is the fallback for browsers without dvh support. */
+  height: 100vh;
+  height: 100dvh;
   display: flex;
   align-items: stretch;
   justify-content: center;
@@ -36,6 +48,9 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
   position: relative;
   width: 100%;
   max-width: 440px;
+  /* Fill the stage exactly — no more, no less. Keeps the tab bar at the
+   * bottom regardless of content length or browser-chrome animations. */
+  height: 100%;
   background: var(--bg);
   border-radius: 36px;
   overflow: hidden;
@@ -45,22 +60,22 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
   flex-direction: column;
 }
 
-@media (max-width: 520px) {
-  .app-stage { padding: 0; background: var(--bg); }
-  .app-frame { border-radius: 0; box-shadow: none; max-width: 100%; min-height: 100dvh; }
-}
-
-/* Installed PWA — drop all device dressing so the OS's real status bar
- * and home indicator show through. Content respects real safe-area insets. */
-@media (display-mode: standalone) {
+/* Drop the fake device dressing on any real mobile viewport OR when
+ * running as an installed PWA. The phone-frame mockup is a desktop-only
+ * pitch visual — on a real phone, the user's actual OS chrome (browser
+ * address bar in Safari/Chrome, or system status bar + home indicator in
+ * standalone mode) is what we want to see. */
+@media (max-width: 520px), (display-mode: standalone) {
   :root {
     --sa-top: env(safe-area-inset-top, 0px);
     --sa-bottom: env(safe-area-inset-bottom, 0px);
   }
   .app-stage { padding: 0; background: var(--bg); }
-  .app-frame { border-radius: 0; box-shadow: none; max-width: 100%; min-height: 100dvh; }
-  .status-bar > * { display: none; }
+  .app-frame { border-radius: 0; box-shadow: none; max-width: 100%; }
+  /* Collapse fake iOS chrome to the real OS safe-area spacing */
   .status-bar { padding: 0; }
+  .status-bar > * { display: none; }
+  .home-indicator { height: env(safe-area-inset-bottom, 0px); }
   .home-indicator i { display: none; }
 }
 
@@ -174,6 +189,8 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
   font-size: 10.5px; font-weight: 500; cursor: pointer;
   font-family: var(--font-ui);
   border-radius: 10px;
+  touch-action: manipulation;    /* no double-tap zoom delay on tab taps */
+  min-height: 56px;              /* comfortable touch target */
 }
 .tab-bar button.active { color: var(--brand); }
 [data-theme="dark"] .tab-bar button.active { color: var(--ink); }
@@ -185,7 +202,11 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
    Generic primitives
    ============================================================ */
 .scroll {
-  flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  flex: 1 1 0;            /* shrink inside flex column instead of overflowing */
+  min-height: 0;          /* Firefox fix: without this, flex children won't shrink */
+  overflow-y: auto;
+  overscroll-behavior-y: contain;    /* keep rubber-band inside this scroll area */
+  -webkit-overflow-scrolling: touch;
   padding: 0 18px 16px;
 }
 .scroll.flush { padding: 0; }
@@ -399,6 +420,8 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
   flex: 1; display: flex; flex-direction: column;
   color: #fff;
 }
+.fullbleed-stage[data-stage="1"] { background: linear-gradient(180deg, oklch(0.62 0.12 240) 0%, oklch(0.38 0.14 245) 100%); }
+.fullbleed-stage[data-stage="2"] { background: linear-gradient(180deg, oklch(0.78 0.15 95) 0%, oklch(0.58 0.16 70) 100%); color: #1a1304; }
 .fullbleed-stage[data-stage="3"] { background: linear-gradient(180deg, oklch(0.65 0.17 55) 0%, oklch(0.42 0.18 35) 100%); }
 .fullbleed-stage[data-stage="4"] { background: linear-gradient(180deg, oklch(0.55 0.21 25) 0%, oklch(0.35 0.18 18) 100%); }
 .fullbleed-stage[data-stage="5"] { background: linear-gradient(180deg, oklch(0.45 0.22 350) 0%, oklch(0.22 0.15 350) 100%); }

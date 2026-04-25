@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAlert } from "../../state/AlertContext";
 import { useSettings } from "../../state/SettingsContext";
 import { AegisLogo } from "../../components/brand/AegisLogo";
 import { StageBadge } from "../../components/ui/StageBadge";
@@ -20,10 +21,14 @@ import { EU_LANGUAGES } from "../../lib/demo";
 export function OnboardingPage() {
   const navigate = useNavigate();
   const { language, setLanguage, setHasOnboarded } = useSettings();
+  const { requestLocation } = useAlert();
   const [step, setStep] = useState(0);
   const total = 4;
 
   const next = () => {
+    // Step 1 is the location permission step — fire the real request when
+    // the user advances past it (browser shows the native prompt).
+    if (step === 1) void requestLocation();
     if (step < total - 1) setStep(step + 1);
     else {
       setHasOnboarded(true);
@@ -206,6 +211,11 @@ function ObNotifications() {
 }
 
 function ObReady() {
+  const { userPlaceName, userCountry } = useAlert();
+  const place = userPlaceName ?? "Quart de Poblet";
+  const sub = userPlaceName
+    ? userCountry ?? "Your area"
+    : "València, ES · Túria basin";
   return (
     <div>
       <div
@@ -234,8 +244,8 @@ function ObReady() {
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 600 }}>Quart de Poblet</div>
-            <div style={{ fontSize: 12, color: "var(--ink-3)" }}>València, ES · Túria basin</div>
+            <div style={{ fontSize: 15, fontWeight: 600 }}>{place}</div>
+            <div style={{ fontSize: 12, color: "var(--ink-3)" }}>{sub}</div>
           </div>
           <StageBadge n={1} />
         </div>
