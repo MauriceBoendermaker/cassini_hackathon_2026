@@ -39,6 +39,7 @@ export function EvacuationPage() {
   const [navigating, setNavigating] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [overlayIdx, setOverlayIdx] = useState<number | null>(null);
+  const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   // Fetch a real OSRM walking route from current GPS to a 300 m NE destination.
   // Re-runs on userPosition change (Valencia toggle, GPS resolve, retry).
@@ -74,6 +75,14 @@ export function EvacuationPage() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [overlayIdx]);
+
+  // While navigating, keep the active step row visible — scroll it into view
+  // inside the .scroll container whenever the user advances.
+  useEffect(() => {
+    if (!navigating) return;
+    const el = stepRefs.current[currentStep];
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [currentStep, navigating]);
 
   function startNavigation() {
     setCurrentStep(0);
@@ -282,6 +291,9 @@ export function EvacuationPage() {
                 return (
                   <div
                     key={i}
+                    ref={(el) => {
+                      stepRefs.current[i] = el;
+                    }}
                     style={{
                       borderBottom: !isLast ? "1px solid var(--line)" : "none",
                       opacity: upcoming ? 0.45 : 1,
