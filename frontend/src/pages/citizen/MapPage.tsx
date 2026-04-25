@@ -351,7 +351,7 @@ export function MapPage() {
   const activeModuleStage = activeModule.stages[effectiveStage - 1];
 
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative" }}>
       {!online && (
         <div className="offline-bar">
           <IconWifiOff size={11} style={{ verticalAlign: "-2px", marginRight: 6 }} />
