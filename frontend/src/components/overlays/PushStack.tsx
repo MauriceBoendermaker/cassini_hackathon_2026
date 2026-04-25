@@ -1,14 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import { useAlert } from "../../state/AlertContext";
-import { getStage, STAGE_COLORS } from "../../lib/demo";
+import { STAGE_COLORS } from "../../lib/demo";
 import { AegisLogo } from "../brand/AegisLogo";
 
 export function PushStack() {
-  const { pushVisible, hidePush, effectiveStage } = useAlert();
+  const { pushVisible, hidePush, effectiveStage, activeModule } = useAlert();
   const navigate = useNavigate();
   if (!pushVisible) return null;
 
-  const s = getStage(effectiveStage);
+  const s = activeModule.stages[effectiveStage - 1];
   const c = STAGE_COLORS[effectiveStage];
 
   const onTap = () => {

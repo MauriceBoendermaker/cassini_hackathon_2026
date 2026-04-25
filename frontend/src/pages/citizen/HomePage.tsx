@@ -12,17 +12,17 @@ import {
   IconTriangle,
   IconWifiOff,
 } from "../../components/icons/Icons";
-import { formatRelative, getStage, NOTIFICATIONS, STAGE_COLORS } from "../../lib/demo";
+import { formatRelative, NOTIFICATIONS, STAGE_COLORS } from "../../lib/demo";
 import { stageHeadline, t } from "../../lib/i18n";
 
 export function HomePage() {
-  const { effectiveStage, userPosition, userPlaceName, userCountry } = useAlert();
+  const { effectiveStage, userPosition, userPlaceName, userCountry, activeModule } = useAlert();
   const { online, previewLang } = useSettings();
   const navigate = useNavigate();
 
   const stage = effectiveStage;
-  const s = getStage(stage);
-  const headline = stageHeadline(previewLang, stage);
+  const s = activeModule.stages[stage - 1];
+  const headline = activeModule.id === "flood" ? stageHeadline(previewLang, stage) : s.headline;
   const isCritical = stage >= 4;
 
   // Real place name if reverse geocoding resolved; otherwise "Your area" if
@@ -125,7 +125,7 @@ export function HomePage() {
         </div>
 
         {/* Critical action card */}
-        {isCritical && (
+        {isCritical && activeModule.evacuationType === "route" && (
           <button
             onClick={() => navigate("/evacuation")}
             style={{
@@ -177,20 +177,15 @@ export function HomePage() {
         {/* Live signals */}
         <div className="eyebrow" style={{ marginTop: 22, marginBottom: 10 }}>Live signals</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          <Stat
-            label="Rainfall · 1h"
-            value={stage >= 3 ? "38" : "4"}
-            unit="mm"
-            tone={stage >= 3 ? "warn" : ""}
-          />
-          <Stat
-            label="River level"
-            value={stage >= 3 ? "+2.4" : "+0.3"}
-            unit="m"
-            tone={stage >= 4 ? "danger" : stage >= 3 ? "warn" : ""}
-          />
-          <Stat label="Wind gusts" value="64" unit="km/h" />
-          <Stat label="Sentinel-1" value="07m" unit="ago" />
+          {activeModule.metrics.map((m) => (
+            <Stat
+              key={m.label}
+              label={m.label}
+              value={m.value(stage)}
+              unit={m.unit}
+              tone={m.tone(stage)}
+            />
+          ))}
         </div>
 
         {/* Map preview */}
@@ -257,7 +252,7 @@ export function HomePage() {
             <div>
               <div style={{ fontSize: 14, fontWeight: 600 }}>{t(previewLang, "viewMap")}</div>
               <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2 }}>
-                Flood overlays · SOS pins · evacuation routes
+                {activeModule.mapLabel}
               </div>
             </div>
             <IconChevronR size={18} style={{ color: "var(--ink-3)" }} />

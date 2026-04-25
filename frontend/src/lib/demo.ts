@@ -169,6 +169,21 @@ export const NOTIFICATIONS: AegisNotification[] = [
     body: "Aegis offline cache refreshed via Galileo broadcast." },
 ];
 
+export const DROUGHT_NOTIFICATIONS: AegisNotification[] = [
+  { id: "d1", minutesAgo: 45,         stage: 4, title: "Severe drought warning",
+    body: "Critical soil moisture deficit. Sentinel-2 NDVI confirms severe vegetation stress in monitored zone." },
+  { id: "d2", minutesAgo: 60 * 3,     stage: 3, title: "Drought watch activated",
+    body: "C3S soil moisture 38% below seasonal average. Agricultural restrictions recommended." },
+  { id: "d3", minutesAgo: 60 * 8,     stage: 3, title: "NDVI alert — vegetation stress",
+    body: "Sentinel-2 NDVI dropped to 0.22. Crop impact assessment underway." },
+  { id: "d4", minutesAgo: 60 * 24,    stage: 2, title: "Dryness advisory issued",
+    body: "Precipitation 48% below normal over 30 days. Discretionary water use reduction advised." },
+  { id: "d5", minutesAgo: 60 * 72,    stage: 2, title: "Groundwater level declining",
+    body: "EFAS hydrology models show groundwater at seasonal low. Conservation measures begin." },
+  { id: "d6", minutesAgo: 60 * 24 * 7, stage: 1, title: "Seasonal monitoring update",
+    body: "Copernicus C3S routine assessment complete. Soil moisture within seasonal norms." },
+];
+
 /** Format a minutes-ago value as a compact relative-time string. */
 export function formatRelative(minutes: number): string {
   if (minutes < 1) return "just now";

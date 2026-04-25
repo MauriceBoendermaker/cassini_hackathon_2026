@@ -9,14 +9,13 @@ import {
   type ReactNode,
 } from "react";
 import {
-  STAGES,
-  VALENCIA,
   stageAtScenario,
   eventsAtScenario,
   type StageNum,
   type ScenarioEvent,
 } from "../lib/demo";
 import { getCurrentPosition, reverseGeocode, type LatLng } from "../lib/geo";
+import { type DisasterModule, FLOOD_MODULE } from "../lib/disaster-types";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -24,6 +23,10 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 type AlertState = {
+  /** Active disaster module (flood, drought, …). */
+  activeModule: DisasterModule;
+  setActiveModule: (m: DisasterModule) => void;
+
   /** Manual stage. */
   stage: StageNum;
   setStage: (s: StageNum) => void;
@@ -75,6 +78,9 @@ type AlertState = {
 const Ctx = createContext<AlertState | null>(null);
 
 export function AlertProvider({ children }: { children: ReactNode }) {
+  const [activeModule, setActiveModuleState] = useState<DisasterModule>(FLOOD_MODULE);
+  const setActiveModule = useCallback((m: DisasterModule) => setActiveModuleState(m), []);
+
   const [stage, setStageState] = useState<StageNum>(1);
   const [scenarioT, setScenarioTState] = useState<number>(0);
   const [scenarioPlaying, setScenarioPlayingState] = useState<boolean>(false);
@@ -224,11 +230,9 @@ export function AlertProvider({ children }: { children: ReactNode }) {
   const showInstall = useCallback(() => setInstallVisible(true), []);
   const hideInstall = useCallback(() => setInstallVisible(false), []);
 
-  // Reference STAGES + VALENCIA so unused-import check is happy.
-  void STAGES;
-  void VALENCIA;
-
   const value: AlertState = {
+    activeModule,
+    setActiveModule,
     stage,
     setStage,
     scenarioT,

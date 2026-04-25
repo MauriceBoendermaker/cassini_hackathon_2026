@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAlert } from "../../state/AlertContext";
 import { useSettings } from "../../state/SettingsContext";
+import { IconSatellite } from "../../components/icons/Icons";
 import { StatusBar } from "../../components/layout/StatusBar";
 import { HomeIndicator } from "../../components/layout/HomeIndicator";
 import { IconCheck, IconClose } from "../../components/icons/Icons";
@@ -11,7 +12,8 @@ type Phase = "idle" | "holding" | "sending" | "sent";
 
 export function SOSPage() {
   const { online } = useSettings();
-  const { userPosition } = useAlert();
+  const { userPosition, activeModule } = useAlert();
+  const isReport = activeModule.sosType === "report";
   const navigate = useNavigate();
   const [phase, setPhase] = useState<Phase>("idle");
   const [hold, setHold] = useState(0);
@@ -56,7 +58,7 @@ export function SOSPage() {
     [],
   );
 
-  if (phase === "sent") return <SosSent online={online} onHome={() => navigate("/")} />;
+  if (phase === "sent") return <SosSent online={online} isReport={isReport} onHome={() => navigate("/")} />;
 
   return (
     <div className="fullbleed-stage" data-stage="4">
@@ -80,7 +82,7 @@ export function SOSPage() {
               letterSpacing: "0.08em",
             }}
           >
-            EMERGENCY SOS
+            {isReport ? "FIELD REPORT" : "EMERGENCY SOS"}
           </div>
         </div>
         <div style={{ width: 38 }} />
@@ -108,7 +110,10 @@ export function SOSPage() {
             opacity: 0.8,
           }}
         >
-          GALILEO {online ? "NETWORK + SAR" : "SAR · OFFLINE"} · ±1.2 m
+          {isReport
+            ? `EGNOS PRECISION · ${online ? "NETWORK" : "OFFLINE"} · ±1.5 M`
+            : `GALILEO ${online ? "NETWORK + SAR" : "SAR · OFFLINE"} · ±1.2 M`
+          }
         </div>
         <h1
           style={{
@@ -120,12 +125,16 @@ export function SOSPage() {
             lineHeight: 1.1,
           }}
         >
-          {phase === "sending" ? "Sending SOS…" : "Hold the button to send SOS"}
+          {isReport
+            ? (phase === "sending" ? "Sending report…" : "Hold to report field conditions")
+            : (phase === "sending" ? "Sending SOS…" : "Hold the button to send SOS")
+          }
         </h1>
         <p style={{ fontSize: 14, opacity: 0.85, lineHeight: 1.5, maxWidth: 320 }}>
-          Your precise location and emergency profile will be transmitted to the nearest
-          rescue unit.{" "}
-          {online ? "Network active." : "Galileo Search & Rescue Service used as fallback."}
+          {isReport
+            ? "Your precise location and field observations will be transmitted to civil protection, helping calibrate satellite drought assessments."
+            : `Your precise location and emergency profile will be transmitted to the nearest rescue unit. ${online ? "Network active." : "Galileo Search & Rescue Service used as fallback."}`
+          }
         </p>
 
         <div
@@ -194,7 +203,7 @@ export function SOSPage() {
                 transition: "height .06s linear",
               }}
             />
-            <span style={{ position: "relative" }}>SOS</span>
+            <span style={{ position: "relative" }}>{isReport ? "SEND" : "SOS"}</span>
           </button>
         </div>
 
@@ -233,7 +242,7 @@ export function SOSPage() {
   );
 }
 
-function SosSent({ online, onHome }: { online: boolean; onHome: () => void }) {
+function SosSent({ online, isReport, onHome }: { online: boolean; isReport: boolean; onHome: () => void }) {
   void online;
   return (
     <div
@@ -256,7 +265,7 @@ function SosSent({ online, onHome }: { online: boolean; onHome: () => void }) {
             width: 64,
             height: 64,
             borderRadius: "50%",
-            background: "oklch(0.65 0.14 145)",
+            background: isReport ? "oklch(0.58 0.16 145)" : "oklch(0.65 0.14 145)",
             color: "#fff",
             display: "flex",
             alignItems: "center",
@@ -264,9 +273,12 @@ function SosSent({ online, onHome }: { online: boolean; onHome: () => void }) {
             marginBottom: 18,
           }}
         >
-          <IconCheck size={32} />
+          {isReport ? <IconSatellite size={30} /> : <IconCheck size={32} />}
         </div>
-        <div className="eyebrow" style={{ color: "rgba(255,255,255,.7)" }}>SOS · ID #SOS-A41</div>
+
+        <div className="eyebrow" style={{ color: "rgba(255,255,255,.7)" }}>
+          {isReport ? "REPORT · ID #DR-F02" : "SOS · ID #SOS-A41"}
+        </div>
         <h1
           style={{
             fontSize: 26,
@@ -276,11 +288,13 @@ function SosSent({ online, onHome }: { online: boolean; onHome: () => void }) {
             lineHeight: 1.15,
           }}
         >
-          SOS received. Stay where you are.
+          {isReport ? "Report received. Thank you." : "SOS received. Stay where you are."}
         </h1>
         <p style={{ fontSize: 14, opacity: 0.85, marginTop: 12, lineHeight: 1.55 }}>
-          A rescue unit has been dispatched. Keep your phone visible and your screen on.
-          You'll be marked as priority.
+          {isReport
+            ? "Your field observation has been logged and will be used to calibrate Copernicus C3S drought assessments for your area."
+            : "A rescue unit has been dispatched. Keep your phone visible and your screen on. You'll be marked as priority."
+          }
         </p>
 
         <div
@@ -292,32 +306,53 @@ function SosSent({ online, onHome }: { online: boolean; onHome: () => void }) {
             border: "1px solid rgba(255,255,255,.12)",
           }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <div className="eyebrow" style={{ color: "rgba(255,255,255,.6)" }}>Nearest unit</div>
-            <span
-              className="chip mono"
-              style={{
-                background: "rgba(255,255,255,.1)",
-                color: "#fff",
-                borderColor: "rgba(255,255,255,.18)",
-              }}
-            >
-              <span className="dot" style={{ background: "oklch(0.7 0.14 145)" }} /> EN ROUTE
-            </span>
-          </div>
-          <div style={{ fontSize: 18, fontWeight: 600, marginTop: 6 }}>BV-04 · Boat unit</div>
-          <div
-            style={{
-              fontSize: 12,
-              opacity: 0.7,
-              marginTop: 4,
-              fontFamily: "var(--font-mono)",
-              textTransform: "uppercase",
-              letterSpacing: "0.04em",
-            }}
-          >
-            CREW 4 · ETA 12 MIN · 1.4 KM
-          </div>
+          {isReport ? (
+            <>
+              <div className="eyebrow" style={{ color: "rgba(255,255,255,.6)" }}>Observation logged</div>
+              <div style={{ fontSize: 18, fontWeight: 600, marginTop: 6 }}>Civil Protection notified</div>
+              <div
+                style={{
+                  fontSize: 12,
+                  opacity: 0.7,
+                  marginTop: 4,
+                  fontFamily: "var(--font-mono)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                }}
+              >
+                COORDINATES VERIFIED · EGNOS ±1.5 M · SENT
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div className="eyebrow" style={{ color: "rgba(255,255,255,.6)" }}>Nearest unit</div>
+                <span
+                  className="chip mono"
+                  style={{
+                    background: "rgba(255,255,255,.1)",
+                    color: "#fff",
+                    borderColor: "rgba(255,255,255,.18)",
+                  }}
+                >
+                  <span className="dot" style={{ background: "oklch(0.7 0.14 145)" }} /> EN ROUTE
+                </span>
+              </div>
+              <div style={{ fontSize: 18, fontWeight: 600, marginTop: 6 }}>BV-04 · Boat unit</div>
+              <div
+                style={{
+                  fontSize: 12,
+                  opacity: 0.7,
+                  marginTop: 4,
+                  fontFamily: "var(--font-mono)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                }}
+              >
+                CREW 4 · ETA 12 MIN · 1.4 KM
+              </div>
+            </>
+          )}
         </div>
 
         <div style={{ flex: 1 }} />
@@ -332,8 +367,10 @@ function SosSent({ online, onHome }: { online: boolean; onHome: () => void }) {
             lineHeight: 1.5,
           }}
         >
-          <strong>While you wait:</strong> move to the highest accessible point indoors,
-          take warm clothes, a torch, and any medications you need.
+          {isReport
+            ? <><strong>Next steps:</strong> continue monitoring your fields. If conditions worsen, resubmit. More reports from your area improve Aegis forecast accuracy.</>
+            : <><strong>While you wait:</strong> move to the highest accessible point indoors, take warm clothes, a torch, and any medications you need.</>
+          }
         </div>
 
         <button

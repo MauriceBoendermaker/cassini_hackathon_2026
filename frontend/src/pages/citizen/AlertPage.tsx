@@ -5,30 +5,20 @@ import { StatusBar } from "../../components/layout/StatusBar";
 import { HomeIndicator } from "../../components/layout/HomeIndicator";
 import {
   IconChevronL,
-  IconHand,
   IconLightning,
-  IconPhone,
+  IconMap,
   IconRoute,
   IconShare,
-  IconUsers,
   IconWifiOff,
 } from "../../components/icons/Icons";
-import { getStage } from "../../lib/demo";
 
 export function AlertPage() {
-  const { effectiveStage } = useAlert();
+  const { effectiveStage, activeModule } = useAlert();
   const { online } = useSettings();
   const navigate = useNavigate();
   const stage = effectiveStage;
-  const s = getStage(stage);
+  const s = activeModule.stages[stage - 1];
   const isOfflineCritical = !online && stage >= 3;
-
-  const items = [
-    { Ic: IconRoute, title: "Move to higher ground", sub: "420 m to assembly point B" },
-    { Ic: IconHand, title: "Avoid basements & underpasses", sub: "Water can rise within minutes" },
-    { Ic: IconPhone, title: "Keep phone charged", sub: "Galileo SOS works without signal" },
-    { Ic: IconUsers, title: "Account for neighbours", sub: "Especially elderly and children" },
-  ];
 
   // Stage 2 (yellow) needs dark UI — the rest use white. rgb is the channel
   // triple we interpolate transparency from, so accents (chips, card tints)
@@ -115,7 +105,7 @@ export function AlertPage() {
                 opacity: 0.8,
               }}
             >
-              {isOfflineCritical ? "OFFLINE AI · ETA TO PEAK" : "TIME UNTIL PEAK"}
+              {isOfflineCritical ? "OFFLINE AI · ETA TO PEAK" : activeModule.countdownLabel}
             </div>
             {isOfflineCritical && (
               <span
@@ -153,7 +143,7 @@ export function AlertPage() {
           What to do now
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {items.map((row, i) => (
+          {activeModule.guidance.map((row, i) => (
             <div
               key={i}
               style={{
@@ -176,7 +166,7 @@ export function AlertPage() {
                   justifyContent: "center",
                 }}
               >
-                <row.Ic size={18} />
+                <row.Icon size={18} />
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 14, fontWeight: 600 }}>{row.title}</div>
@@ -203,9 +193,9 @@ export function AlertPage() {
             letterSpacing: "0.04em",
           }}
         >
-          <div>Source · Copernicus EMS · EFAS feed</div>
-          <div>Co-issued · National civil protection</div>
-          <div>Pass · Sentinel-1A · 13:51 CEST</div>
+          {activeModule.sourceLines.map((line, i) => (
+            <div key={i}>{line}</div>
+          ))}
         </div>
       </div>
 
@@ -218,16 +208,20 @@ export function AlertPage() {
             color: "inherit",
             border: `1px solid rgba(${rgb},.22)`,
           }}
-          onClick={() => navigate("/evacuation")}
+          onClick={() => navigate(activeModule.evacuationType === "route" ? "/evacuation" : "/map")}
         >
-          <IconRoute size={16} /> Route
+          {activeModule.evacuationType === "route"
+            ? <><IconRoute size={16} /> Route</>
+            : <><IconMap size={16} /> View Map</>
+          }
         </button>
         <button
           className="btn"
           style={{ flex: 1, background: "#fff", color: "var(--ink-card)" }}
           onClick={() => navigate("/sos")}
         >
-          <IconLightning size={16} /> Send SOS
+          <IconLightning size={16} />
+          {activeModule.sosType === "report" ? " Report Impact" : " Send SOS"}
         </button>
       </div>
       <HomeIndicator />

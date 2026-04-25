@@ -12,6 +12,7 @@ import {
   IconClose,
   IconCrosshair,
   IconDrop,
+  IconEye,
   IconLayers,
   IconMinus,
   IconPlus,
@@ -21,14 +22,13 @@ import {
 import { FLOOD_LAYERS, SOS_PINS, FF_UNITS, VALENCIA } from "../../lib/demo";
 import { tileLayerConfig } from "../../lib/map";
 
-// Demo road closures — key routes affected by flooding
+// Flood-specific overlays
 const ROAD_CLOSURES: [number, number][][] = [
   [[39.466, -0.385], [39.463, -0.379]],
   [[39.455, -0.377], [39.452, -0.372]],
   [[39.458, -0.353], [39.461, -0.348]],
 ];
 
-// Demo river sensors along the Túria
 const RIVER_SENSORS = [
   { id: "S1", lat: 39.485, lng: -0.421, level: 2.1, status: "warn" as const },
   { id: "S2", lat: 39.475, lng: -0.395, level: 3.4, status: "alert" as const },
@@ -36,8 +36,29 @@ const RIVER_SENSORS = [
   { id: "S4", lat: 39.449, lng: -0.341, level: 1.2, status: "ok" as const },
 ];
 
-type LayerState = { floodZones: boolean; roadClosures: boolean; sensors: boolean };
-const DEFAULT_LAYERS: LayerState = { floodZones: true, roadClosures: false, sensors: false };
+// Drought-specific overlays — reuse FLOOD_LAYERS geometry with drought colours
+const DROUGHT_COLORS = {
+  advisory: "#e6c84a",   // D1 - amber-yellow
+  watch:    "#c87820",   // D2 - dark amber
+  warning:  "#7a3a10",   // D3 - deep brown
+};
+
+const SOIL_SENSORS = [
+  { id: "SM-1", lat: 39.485, lng: -0.421, moisture: 18, status: "alert" as const },
+  { id: "SM-2", lat: 39.475, lng: -0.395, moisture: 24, status: "warn" as const },
+  { id: "SM-3", lat: 39.462, lng: -0.368, moisture: 31, status: "ok" as const },
+  { id: "SM-4", lat: 39.449, lng: -0.341, moisture: 28, status: "ok" as const },
+];
+
+// Water restriction zones (drought) — same roads, different semantics
+const WATER_RESTRICTION_ZONES: [number, number][][] = [
+  [[39.466, -0.385], [39.463, -0.379]],
+  [[39.455, -0.377], [39.452, -0.372]],
+  [[39.458, -0.353], [39.461, -0.348]],
+];
+
+type LayerState = { primaryZones: boolean; secondary: boolean; sensors: boolean };
+const DEFAULT_LAYERS: LayerState = { primaryZones: true, secondary: false, sensors: false };
 
 function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -75,9 +96,11 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
 }
 
 export function MapPage() {
-  const { effectiveStage, userPosition, userPlaceName } = useAlert();
+  const { effectiveStage, userPosition, userPlaceName, activeModule } = useAlert();
   const { online, role } = useSettings();
   const navigate = useNavigate();
+
+  const isFlood = activeModule.id === "flood";
 
   const [showLayers, setShowLayers] = useState(false);
   const [layers, setLayers] = useState<LayerState>(DEFAULT_LAYERS);
@@ -85,10 +108,10 @@ export function MapPage() {
   const mapEl = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const layersRef = useRef<L.Layer[]>([]);
-  const roadLayersRef = useRef<L.Layer[]>([]);
+  const secondaryLayersRef = useRef<L.Layer[]>([]);
   const sensorLayersRef = useRef<L.Layer[]>([]);
 
-  const hasNonDefault = !layers.floodZones || layers.roadClosures || layers.sensors;
+  const hasNonDefault = !layers.primaryZones || layers.secondary || layers.sensors;
 
   useEffect(() => {
     if (!mapEl.current || mapRef.current) return;
@@ -112,7 +135,7 @@ export function MapPage() {
     }
   }, [userPosition]);
 
-  // Flood zones + user marker + SOS + FF units
+  // Primary zone layers + user marker + SOS + FF units
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -132,10 +155,17 @@ export function MapPage() {
       layersRef.current.push(p);
     };
 
-    if (layers.floodZones) {
-      if (effectiveStage >= 2) FLOOD_LAYERS.watch.forEach((c) => addPoly(c, "#f5c542", 0.25));
-      if (effectiveStage >= 3) FLOOD_LAYERS.warning.forEach((c) => addPoly(c, "#e07b29", 0.35));
-      if (effectiveStage >= 4) FLOOD_LAYERS.severe.forEach((c) => addPoly(c, "#c8412c", 0.45));
+    if (layers.primaryZones) {
+      if (isFlood) {
+        if (effectiveStage >= 2) FLOOD_LAYERS.watch.forEach((c) => addPoly(c, "#f5c542", 0.25));
+        if (effectiveStage >= 3) FLOOD_LAYERS.warning.forEach((c) => addPoly(c, "#e07b29", 0.35));
+        if (effectiveStage >= 4) FLOOD_LAYERS.severe.forEach((c) => addPoly(c, "#c8412c", 0.45));
+      } else {
+        // Drought — reuse same polygons with drought severity colours
+        if (effectiveStage >= 2) FLOOD_LAYERS.watch.forEach((c) => addPoly(c, DROUGHT_COLORS.advisory, 0.25));
+        if (effectiveStage >= 3) FLOOD_LAYERS.warning.forEach((c) => addPoly(c, DROUGHT_COLORS.watch, 0.35));
+        if (effectiveStage >= 4) FLOOD_LAYERS.severe.forEach((c) => addPoly(c, DROUGHT_COLORS.warning, 0.45));
+      }
     }
 
     const userIcon = L.divIcon({
@@ -149,88 +179,125 @@ export function MapPage() {
       : VALENCIA.user;
     layersRef.current.push(L.marker(userLatLng, { icon: userIcon }).addTo(map));
 
-    if ((role === "firefighter" && effectiveStage >= 4) || effectiveStage >= 5) {
-      SOS_PINS.forEach((p) => {
-        const ic = L.divIcon({
-          className: "",
-          html: '<div class="sos-pin"><i>S</i></div>',
-          iconSize: [28, 28],
-          iconAnchor: [14, 28],
+    if (isFlood) {
+      if ((role === "firefighter" && effectiveStage >= 4) || effectiveStage >= 5) {
+        SOS_PINS.forEach((p) => {
+          const ic = L.divIcon({
+            className: "",
+            html: '<div class="sos-pin"><i>S</i></div>',
+            iconSize: [28, 28],
+            iconAnchor: [14, 28],
+          });
+          const m = L.marker([p.lat, p.lng], { icon: ic }).addTo(map);
+          m.bindTooltip(`${p.id} · ${p.n} people · ${p.age}m`, { direction: "top" });
+          layersRef.current.push(m);
         });
-        const m = L.marker([p.lat, p.lng], { icon: ic }).addTo(map);
-        m.bindTooltip(`${p.id} · ${p.n} people · ${p.age}m`, { direction: "top" });
-        layersRef.current.push(m);
-      });
-    }
-
-    if (role === "firefighter") {
-      FF_UNITS.forEach((u) => {
-        const ic = L.divIcon({
-          className: "",
-          html: `<div class="firefighter-pin">${u.type[0]}</div>`,
-          iconSize: [22, 22],
-          iconAnchor: [11, 11],
+      }
+      if (role === "firefighter") {
+        FF_UNITS.forEach((u) => {
+          const ic = L.divIcon({
+            className: "",
+            html: `<div class="firefighter-pin">${u.type[0]}</div>`,
+            iconSize: [22, 22],
+            iconAnchor: [11, 11],
+          });
+          layersRef.current.push(L.marker([u.lat, u.lng], { icon: ic }).addTo(map));
         });
-        layersRef.current.push(L.marker([u.lat, u.lng], { icon: ic }).addTo(map));
-      });
+      }
     }
-  }, [effectiveStage, role, layers.floodZones]);
+  }, [effectiveStage, role, layers.primaryZones, isFlood]);
 
-  // Road closure overlays
+  // Secondary overlays (road closures / water restriction zones)
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    roadLayersRef.current.forEach((l) => map.removeLayer(l));
-    roadLayersRef.current = [];
-    if (!layers.roadClosures) return;
-    ROAD_CLOSURES.forEach((pts) => {
-      const line = L.polyline(pts as [number, number][], {
-        color: "#e07b29",
-        weight: 5,
-        opacity: 0.85,
-        dashArray: "8 6",
-      }).addTo(map);
-      line.bindTooltip("Road closed · flooding", { direction: "top" });
-      roadLayersRef.current.push(line);
-    });
-  }, [layers.roadClosures]);
+    secondaryLayersRef.current.forEach((l) => map.removeLayer(l));
+    secondaryLayersRef.current = [];
+    if (!layers.secondary) return;
 
-  // River sensor overlays
+    if (isFlood) {
+      ROAD_CLOSURES.forEach((pts) => {
+        const line = L.polyline(pts as [number, number][], {
+          color: "#e07b29",
+          weight: 5,
+          opacity: 0.85,
+          dashArray: "8 6",
+        }).addTo(map);
+        line.bindTooltip("Road closed · flooding", { direction: "top" });
+        secondaryLayersRef.current.push(line);
+      });
+    } else {
+      WATER_RESTRICTION_ZONES.forEach((pts) => {
+        const line = L.polyline(pts as [number, number][], {
+          color: DROUGHT_COLORS.watch,
+          weight: 5,
+          opacity: 0.85,
+          dashArray: "8 6",
+        }).addTo(map);
+        line.bindTooltip("Water restriction zone · drought", { direction: "top" });
+        secondaryLayersRef.current.push(line);
+      });
+    }
+  }, [layers.secondary, isFlood]);
+
+  // Sensor overlays
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
     sensorLayersRef.current.forEach((l) => map.removeLayer(l));
     sensorLayersRef.current = [];
     if (!layers.sensors) return;
-    RIVER_SENSORS.forEach((s) => {
-      const color =
-        s.status === "alert" ? "#c8412c" : s.status === "warn" ? "#f5c542" : "oklch(0.65 0.14 145)";
-      const ic = L.divIcon({
-        className: "",
-        html: `<div style="width:22px;height:22px;border-radius:50%;background:${color};border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;font-family:monospace">H</div>`,
-        iconSize: [22, 22],
-        iconAnchor: [11, 11],
+
+    if (isFlood) {
+      RIVER_SENSORS.forEach((s) => {
+        const color =
+          s.status === "alert" ? "#c8412c" : s.status === "warn" ? "#f5c542" : "oklch(0.65 0.14 145)";
+        const ic = L.divIcon({
+          className: "",
+          html: `<div style="width:22px;height:22px;border-radius:50%;background:${color};border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;font-family:monospace">H</div>`,
+          iconSize: [22, 22],
+          iconAnchor: [11, 11],
+        });
+        const m = L.marker([s.lat, s.lng], { icon: ic }).addTo(map);
+        m.bindTooltip(`${s.id} · ${s.level} m water level`, { direction: "top" });
+        sensorLayersRef.current.push(m);
       });
-      const m = L.marker([s.lat, s.lng], { icon: ic }).addTo(map);
-      m.bindTooltip(`${s.id} · ${s.level} m water level`, { direction: "top" });
-      sensorLayersRef.current.push(m);
-    });
-  }, [layers.sensors]);
+    } else {
+      SOIL_SENSORS.forEach((s) => {
+        const color =
+          s.status === "alert" ? DROUGHT_COLORS.warning : s.status === "warn" ? DROUGHT_COLORS.advisory : "oklch(0.65 0.14 145)";
+        const ic = L.divIcon({
+          className: "",
+          html: `<div style="width:22px;height:22px;border-radius:50%;background:${color};border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;font-family:monospace">M</div>`,
+          iconSize: [22, 22],
+          iconAnchor: [11, 11],
+        });
+        const m = L.marker([s.lat, s.lng], { icon: ic }).addTo(map);
+        m.bindTooltip(`${s.id} · ${s.moisture}% soil moisture`, { direction: "top" });
+        sensorLayersRef.current.push(m);
+      });
+    }
+  }, [layers.sensors, isFlood]);
 
   function setLayer<K extends keyof LayerState>(key: K, val: boolean) {
     setLayers((prev) => ({ ...prev, [key]: val }));
   }
 
   const locSuffix = userPlaceName ? ` · ${userPlaceName}` : "";
-  const stageHeadline =
-    effectiveStage <= 2
-      ? "No active flooding"
-      : effectiveStage === 3
-        ? `Localised flooding${locSuffix}`
-        : effectiveStage === 4
-          ? "Severe flooding reported"
-          : "Evacuation in effect";
-  const mapTitle = userPlaceName ?? "Túria basin";
+
+  const stageHeadline = isFlood
+    ? effectiveStage <= 2 ? "No active flooding"
+      : effectiveStage === 3 ? `Localised flooding${locSuffix}`
+      : effectiveStage === 4 ? "Severe flooding reported"
+      : "Evacuation in effect"
+    : effectiveStage <= 2 ? "Normal moisture levels"
+      : effectiveStage === 3 ? `Drought watch active${locSuffix}`
+      : effectiveStage === 4 ? "Severe soil moisture deficit"
+      : "Drought emergency declared";
+
+  const mapTitle = userPlaceName ?? (isFlood ? "Túria basin" : "Monitoring zone");
+  const appBarSub = isFlood ? "LIVE FLOOD MAP" : "DROUGHT RISK MAP · C3S";
+  const activeModuleStage = activeModule.stages[effectiveStage - 1];
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
@@ -241,7 +308,7 @@ export function MapPage() {
         </div>
       )}
       <AppBar
-        sub="LIVE FLOOD MAP"
+        sub={appBarSub}
         title={mapTitle}
         left={
           <button className="icon-btn" onClick={() => navigate("/")} aria-label="Back">
@@ -295,6 +362,7 @@ export function MapPage() {
             <IconCrosshair size={16} />
           </button>
         </div>
+
         <div className="map-legend">
           <div
             style={{
@@ -307,22 +375,35 @@ export function MapPage() {
               color: "var(--ink-3)",
             }}
           >
-            Flood extent
+            {isFlood ? "Flood extent" : "Drought severity"}
           </div>
-          {layers.floodZones && (
+          {layers.primaryZones && isFlood && (
             <>
               <div className="lg-row"><i style={{ background: "#f5c542" }} /> Watch · forecast</div>
               <div className="lg-row"><i style={{ background: "#e07b29" }} /> Warning · likely</div>
               <div className="lg-row"><i style={{ background: "#c8412c" }} /> Severe · observed (SAR)</div>
             </>
           )}
-          {layers.roadClosures && (
+          {layers.primaryZones && !isFlood && (
+            <>
+              <div className="lg-row"><i style={{ background: DROUGHT_COLORS.advisory }} /> Advisory · below normal</div>
+              <div className="lg-row"><i style={{ background: DROUGHT_COLORS.watch }} /> Watch · significant deficit</div>
+              <div className="lg-row"><i style={{ background: DROUGHT_COLORS.warning }} /> Warning · critical</div>
+            </>
+          )}
+          {layers.secondary && isFlood && (
             <div className="lg-row"><i style={{ background: "#e07b29", borderRadius: 2 }} /> Road closed</div>
           )}
-          {layers.sensors && (
+          {layers.secondary && !isFlood && (
+            <div className="lg-row"><i style={{ background: DROUGHT_COLORS.watch, borderRadius: 2 }} /> Water restriction</div>
+          )}
+          {layers.sensors && isFlood && (
             <div className="lg-row"><i style={{ background: "#f5c542", borderRadius: "50%" }} /> River sensor</div>
           )}
-          {role === "firefighter" && (
+          {layers.sensors && !isFlood && (
+            <div className="lg-row"><i style={{ background: DROUGHT_COLORS.advisory, borderRadius: "50%" }} /> Soil moisture</div>
+          )}
+          {role === "firefighter" && isFlood && (
             <>
               <div className="divider" style={{ margin: "6px 0" }} />
               <div className="lg-row"><i style={{ background: "oklch(0.55 0.18 250)" }} /> Units</div>
@@ -330,9 +411,15 @@ export function MapPage() {
             </>
           )}
         </div>
+
         <div className="map-info-card">
           <div className="card" style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <StageBadge n={effectiveStage} size="sm" />
+            <StageBadge
+              n={effectiveStage}
+              size="sm"
+              short={activeModuleStage.short}
+              label={activeModuleStage.label}
+            />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 600 }}>{stageHeadline}</div>
               <div
@@ -343,9 +430,12 @@ export function MapPage() {
                   marginTop: 2,
                 }}
               >
-                {role === "firefighter"
-                  ? `${SOS_PINS.length} SOS · ${FF_UNITS.length} UNITS`
-                  : `SAR ${online ? "live" : "cached"} · 7 min ago`}
+                {isFlood
+                  ? (role === "firefighter"
+                      ? `${SOS_PINS.length} SOS · ${FF_UNITS.length} UNITS`
+                      : `SAR ${online ? "live" : "cached"} · 7 min ago`)
+                  : `C3S ${online ? "live" : "cached"} · Sentinel-2 1d ago`
+                }
               </div>
             </div>
             <IconChevronR size={16} style={{ color: "var(--ink-3)" }} />
@@ -354,7 +444,12 @@ export function MapPage() {
       </div>
 
       {showLayers && (
-        <LayersPanel layers={layers} setLayer={setLayer} onClose={() => setShowLayers(false)} />
+        <LayersPanel
+          layers={layers}
+          setLayer={setLayer}
+          isFlood={isFlood}
+          onClose={() => setShowLayers(false)}
+        />
       )}
     </div>
   );
@@ -404,10 +499,12 @@ function LayerRow({
 function LayersPanel({
   layers,
   setLayer,
+  isFlood,
   onClose,
 }: {
   layers: LayerState;
   setLayer: <K extends keyof LayerState>(key: K, val: boolean) => void;
+  isFlood: boolean;
   onClose: () => void;
 }) {
   return (
@@ -428,26 +525,26 @@ function LayersPanel({
           <LayerRow
             icon={<IconLayers size={18} />}
             iconBg="var(--ink-card)"
-            title="Flood zones"
-            sub="Copernicus SAR flood extent"
-            on={layers.floodZones}
-            onChange={(v) => setLayer("floodZones", v)}
+            title={isFlood ? "Flood zones" : "Drought risk zones"}
+            sub={isFlood ? "Copernicus SAR flood extent" : "C3S soil moisture deficit index"}
+            on={layers.primaryZones}
+            onChange={(v) => setLayer("primaryZones", v)}
           />
           <div style={{ height: 1, background: "var(--line)", margin: "0 0 0 44px" }} />
           <LayerRow
-            icon={<IconRoute size={18} />}
-            iconBg="oklch(0.62 0.18 50)"
-            title="Road closures"
-            sub="Affected roads · real-time traffic"
-            on={layers.roadClosures}
-            onChange={(v) => setLayer("roadClosures", v)}
+            icon={isFlood ? <IconRoute size={18} /> : <IconDrop size={18} />}
+            iconBg={isFlood ? "oklch(0.62 0.18 50)" : "oklch(0.55 0.18 45)"}
+            title={isFlood ? "Road closures" : "Water restriction zones"}
+            sub={isFlood ? "Affected roads · real-time traffic" : "Active restrictions · civil protection"}
+            on={layers.secondary}
+            onChange={(v) => setLayer("secondary", v)}
           />
           <div style={{ height: 1, background: "var(--line)", margin: "0 0 0 44px" }} />
           <LayerRow
-            icon={<IconDrop size={18} />}
-            iconBg="oklch(0.55 0.18 230)"
-            title="River sensors"
-            sub="Water level gauges · Túria basin"
+            icon={isFlood ? <IconDrop size={18} /> : <IconEye size={18} />}
+            iconBg={isFlood ? "oklch(0.55 0.18 230)" : "oklch(0.52 0.14 145)"}
+            title={isFlood ? "River sensors" : "Soil moisture sensors"}
+            sub={isFlood ? "Water level gauges · Túria basin" : "In-situ soil moisture · C3S calibrated"}
             on={layers.sensors}
             onChange={(v) => setLayer("sensors", v)}
           />
@@ -462,7 +559,10 @@ function LayersPanel({
             textAlign: "center",
           }}
         >
-          Satellite data: Copernicus EMS · Sensor data: CHJ / SAIH
+          {isFlood
+            ? "Satellite data: Copernicus EMS · Sensor data: CHJ / SAIH"
+            : "Satellite data: Copernicus C3S · Sentinel-2 NDVI · ERA5"
+          }
         </div>
       </div>
     </>
