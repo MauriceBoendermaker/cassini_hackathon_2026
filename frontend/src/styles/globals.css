@@ -291,7 +291,7 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
 .stage-card {
   position: relative;
   border-radius: var(--r-xl);
-  padding: 20px;
+  padding: 26px 24px 22px;
   color: #fff;
   background: var(--brand);
   overflow: hidden;
@@ -313,10 +313,10 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
 }
 
 .stage-meter {
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 14px;
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 20px;
 }
 .stage-meter i {
-  height: 4px; border-radius: 2px; background: rgba(255,255,255,.25);
+  height: 6px; border-radius: 3px; background: rgba(255,255,255,.25);
 }
 .stage-meter i.on { background: rgba(255,255,255,.95); }
 .stage-card[data-stage="2"] .stage-meter i { background: rgba(0,0,0,.18); }

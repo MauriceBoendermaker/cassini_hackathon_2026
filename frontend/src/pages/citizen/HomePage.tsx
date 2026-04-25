@@ -5,7 +5,6 @@ import { useSettings } from "../../state/SettingsContext";
 import { AegisLogo } from "../../components/brand/AegisLogo";
 import { AppBar } from "../../components/layout/AppBar";
 import { StageMeter } from "../../components/ui/StageMeter";
-import { Stat } from "../../components/ui/Stat";
 import {
   IconChevronR,
   IconRoute,
@@ -15,7 +14,6 @@ import {
 } from "../../components/icons/Icons";
 import { formatRelative, NOTIFICATIONS, DROUGHT_NOTIFICATIONS, STAGE_COLORS } from "../../lib/demo";
 import { stageHeadline, t } from "../../lib/i18n";
-import { useWeather } from "../../lib/useWeather";
 
 function nextEfasCountdown(): string {
   const now = new Date();
@@ -31,8 +29,6 @@ export function HomePage() {
   const { effectiveStage, userPosition, userPlaceName, userCountry, activeModule } = useAlert();
   const { online, previewLang } = useSettings();
   const navigate = useNavigate();
-  // Fall back to Valencia coords so weather always loads even before GPS resolves.
-  const weather = useWeather(userPosition?.lat ?? 39.4699, userPosition?.lng ?? -0.3763);
 
   const [countdown, setCountdown] = useState(nextEfasCountdown);
   useEffect(() => {
@@ -86,9 +82,9 @@ export function HomePage() {
                 style={{
                   fontFamily: "var(--font-mono)",
                   fontWeight: 600,
-                  fontSize: 13,
-                  letterSpacing: "0.04em",
-                  marginTop: 4,
+                  fontSize: 13.5,
+                  letterSpacing: "0.05em",
+                  marginTop: 6,
                   opacity: 0.85,
                 }}
               >
@@ -110,17 +106,17 @@ export function HomePage() {
 
           <div
             style={{
-              fontSize: 26,
+              fontSize: 34,
               fontWeight: 600,
-              letterSpacing: "-0.02em",
-              lineHeight: 1.15,
-              marginTop: 18,
-              maxWidth: "90%",
+              letterSpacing: "-0.025em",
+              lineHeight: 1.1,
+              marginTop: 22,
+              maxWidth: "92%",
             }}
           >
             {headline}
           </div>
-          <div style={{ fontSize: 13.5, opacity: 0.85, marginTop: 8, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 15, opacity: 0.88, marginTop: 12, lineHeight: 1.45, maxWidth: "94%" }}>
             {s.blurb}
           </div>
 
@@ -131,15 +127,16 @@ export function HomePage() {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              marginTop: 14,
-              fontSize: 11,
-              opacity: 0.8,
+              marginTop: 18,
+              fontSize: 12,
+              opacity: 0.85,
               fontFamily: "var(--font-mono)",
+              letterSpacing: "0.04em",
             }}
           >
             <span>NEXT UPDATE · {countdown}</span>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-              {t(previewLang, "seeAlert")} <IconChevronR size={12} />
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontWeight: 600 }}>
+              {t(previewLang, "seeAlert")} <IconChevronR size={13} />
             </span>
           </div>
         </div>
@@ -193,27 +190,6 @@ export function HomePage() {
             <IconChevronR size={18} />
           </button>
         )}
-
-        {/* Live signals */}
-        <div className="eyebrow" style={{ marginTop: 22, marginBottom: 10 }}>Live signals</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          {activeModule.metrics.map((m) => {
-            let value = m.value(stage);
-            if (weather) {
-              if (m.label.startsWith("Rainfall")) value = String(weather.precipitation1h);
-              if (m.label.startsWith("Wind"))     value = String(weather.windGusts);
-            }
-            return (
-              <Stat
-                key={m.label}
-                label={m.label}
-                value={value}
-                unit={m.unit}
-                tone={m.tone(stage)}
-              />
-            );
-          })}
-        </div>
 
         {/* Map preview */}
         <button
