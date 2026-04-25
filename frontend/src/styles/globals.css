@@ -88,20 +88,17 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
     --sa-top: env(safe-area-inset-top, 0px);
     --sa-bottom: env(safe-area-inset-bottom, 0px);
   }
+  /* Make the page bg match the app bg so any momentary gap (e.g. iOS
+   * Safari URL-bar animation, dvh vs lvh transitions) doesn't reveal
+   * a different color. */
+  body { background: var(--bg); }
   .app-stage { padding: 0; background: var(--bg); }
   .app-frame { border-radius: 0; box-shadow: none; max-width: 100%; }
-  /* Push our own chrome inside the device safe areas. The +8 / +6 buffer
-   * ensures content always clears the iPhone Dynamic Island even when
-   * env() under-reports (some Safari + non-installed PWA combos). */
-  .app-bar { padding-top: calc(env(safe-area-inset-top, 0px) + 12px); }
-  .offline-bar { padding-top: calc(env(safe-area-inset-top, 0px) + 6px); }
-  .offline-bar + .app-bar { padding-top: 6px; }    /* offline-bar already cleared the notch */
-  .tab-bar { padding-bottom: max(8px, env(safe-area-inset-bottom)); }
-  .fullbleed-stage { padding-bottom: env(safe-area-inset-bottom); }
-  .ob-stage {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: max(24px, env(safe-area-inset-bottom));
-  }
+  /* Chrome safe-area paddings (.app-bar, .tab-bar, .offline-bar,
+   * .fullbleed-stage, .ob-stage) live in a SECOND @media block at the
+   * end of this file — placed there because their base rules below use
+   * the `padding` shorthand, which would otherwise reset our padding-top
+   * / padding-bottom overrides via cascade order. */
 }
 
 .app-viewport {
@@ -982,4 +979,40 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
   padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0,0,0,0);
   white-space: nowrap; border: 0;
+}
+
+/* ============================================================
+   Mobile chrome safe-area padding
+   ----------------------------------------------------------------
+   These rules MUST live at the bottom of the file. Their selectors
+   target the same classes the base rules (.app-bar, .tab-bar, etc.)
+   set with the `padding` shorthand. Same specificity → later wins.
+   Placing this block earlier (next to the rest of the mobile @media
+   at the top) caused these padding-top / padding-bottom values to
+   be silently overridden by the later shorthand declarations,
+   which is why the dynamic-island clearance and home-indicator
+   safe area weren't being applied on real devices.
+   ============================================================ */
+@media (max-width: 520px), (display-mode: standalone), (pointer: coarse) {
+  .app-bar {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
+  }
+  .offline-bar {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 6px);
+  }
+  /* Offline bar already cleared the notch — app-bar below it is just
+   * visual padding. */
+  .offline-bar + .app-bar {
+    padding-top: 6px;
+  }
+  .tab-bar {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
+  }
+  .fullbleed-stage {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .ob-stage {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 24px);
+  }
 }
