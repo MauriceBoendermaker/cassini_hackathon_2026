@@ -33,7 +33,7 @@ export function SettingsPage() {
     language, setLanguage, dark, setDark, online, setOnline, role, setRole,
     alertTiers, alertTiersDND, alertRadiusKm, householdMembers, emergencyContacts,
   } = useSettings();
-  const { userPlaceName, userCountry, userPosition, requestLocation } = useAlert();
+  const { userPlaceName, userCountry, userPosition } = useAlert();
   const [showLang, setShowLang] = useState(false);
   const [showAlertTiers, setShowAlertTiers] = useState(false);
   const [showAlertArea, setShowAlertArea] = useState(false);
@@ -65,11 +65,6 @@ export function SettingsPage() {
   const contactsSub = emergencyContacts.length === 0
     ? "112 only"
     : `${emergencyContacts.length + 1} contacts · 112 + ${emergencyContacts[0].name}`;
-  const locationSub = userPlaceName
-    ? `Sharing ${userPlaceName}${userCountry ? `, ${userCountry}` : ""}`
-    : userPosition
-      ? `${userPosition.lat.toFixed(3)}°, ${userPosition.lng.toFixed(3)}°`
-      : "Not shared — tap to enable";
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
@@ -164,14 +159,6 @@ export function SettingsPage() {
         <div className="eyebrow" style={{ marginTop: 22, marginBottom: 6 }}>Alerts</div>
         <div className="card" style={{ padding: "4px 14px" }}>
           <div className="list">
-            <div className="list-row" onClick={() => void requestLocation()}>
-              <div className="lr-icon"><IconMapPin size={18} /></div>
-              <div className="lr-body">
-                <div className="lr-title">Use my location</div>
-                <div className="lr-sub">{locationSub}</div>
-              </div>
-              <IconChevronR size={16} style={{ color: "var(--ink-3)" }} />
-            </div>
             <div className="list-row" onClick={() => setShowAlertTiers(true)}>
               <div className="lr-icon"><IconBell size={18} /></div>
               <div className="lr-body">

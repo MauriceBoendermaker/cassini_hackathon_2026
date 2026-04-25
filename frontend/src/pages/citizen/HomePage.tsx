@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import L from "leaflet";
 import { useAlert } from "../../state/AlertContext";
 import { useSettings } from "../../state/SettingsContext";
 import { AegisLogo } from "../../components/brand/AegisLogo";
 import { AppBar } from "../../components/layout/AppBar";
 import { StageMeter } from "../../components/ui/StageMeter";
-import { Stat } from "../../components/ui/Stat";
 import {
   IconChevronR,
   IconRoute,
@@ -13,9 +13,9 @@ import {
   IconTriangle,
   IconWifiOff,
 } from "../../components/icons/Icons";
-import { formatRelative, NOTIFICATIONS, DROUGHT_NOTIFICATIONS, STAGE_COLORS } from "../../lib/demo";
+import { formatRelative, NOTIFICATIONS, DROUGHT_NOTIFICATIONS, STAGE_COLORS, VALENCIA } from "../../lib/demo";
 import { stageHeadline, t } from "../../lib/i18n";
-import { useWeather } from "../../lib/useWeather";
+import { tileLayerConfig } from "../../lib/map";
 
 function nextEfasCountdown(): string {
   const now = new Date();
@@ -27,18 +27,67 @@ function nextEfasCountdown(): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
+function nextEfasParts(): { h: string; m: string; s: string } {
+  const now = new Date();
+  const secsInto6h = (now.getUTCHours() % 6) * 3600 + now.getUTCMinutes() * 60 + now.getUTCSeconds();
+  const rem = 6 * 3600 - secsInto6h;
+  return {
+    h: String(Math.floor(rem / 3600)).padStart(2, "0"),
+    m: String(Math.floor((rem % 3600) / 60)).padStart(2, "0"),
+    s: String(rem % 60).padStart(2, "0"),
+  };
+}
+
 export function HomePage() {
   const { effectiveStage, userPosition, userPlaceName, userCountry, activeModule } = useAlert();
   const { online, previewLang } = useSettings();
   const navigate = useNavigate();
-  // Fall back to Valencia coords so weather always loads even before GPS resolves.
-  const weather = useWeather(userPosition?.lat ?? 39.4699, userPosition?.lng ?? -0.3763);
 
   const [countdown, setCountdown] = useState(nextEfasCountdown);
   useEffect(() => {
     const id = setInterval(() => setCountdown(nextEfasCountdown()), 30_000);
     return () => clearInterval(id);
   }, []);
+
+  // High-precision countdown for stage ≥ 4 — same source as AlertPage. Only
+  // ticks while critical so we don't re-render every second on quiet stages.
+  const [cd, setCd] = useState(nextEfasParts);
+  const isCriticalEarly = effectiveStage >= 4;
+  useEffect(() => {
+    if (!isCriticalEarly) return;
+    setCd(nextEfasParts());
+    const id = setInterval(() => setCd(nextEfasParts()), 1_000);
+    return () => clearInterval(id);
+  }, [isCriticalEarly]);
+
+  // Vague OSM map preview centred on the user (or Valencia anchor as fallback).
+  // Non-interactive — clicks pass through to the parent button which opens /map.
+  const previewMapEl = useRef<HTMLDivElement | null>(null);
+  const previewMapRef = useRef<L.Map | null>(null);
+  useEffect(() => {
+    if (!previewMapEl.current) return;
+    const lat = userPosition?.lat ?? VALENCIA.center[0];
+    const lng = userPosition?.lng ?? VALENCIA.center[1];
+    if (previewMapRef.current) {
+      previewMapRef.current.setView([lat, lng], 13);
+      return;
+    }
+    const map = L.map(previewMapEl.current, {
+      center: [lat, lng],
+      zoom: 13,
+      zoomControl: false,
+      attributionControl: false,
+      dragging: false,
+      scrollWheelZoom: false,
+      doubleClickZoom: false,
+      touchZoom: false,
+      boxZoom: false,
+      keyboard: false,
+    });
+    const { url, options } = tileLayerConfig();
+    L.tileLayer(url, options).addTo(map);
+    previewMapRef.current = map;
+  }, [userPosition]);
 
   const stage = effectiveStage;
   const s = activeModule.stages[stage - 1];
@@ -86,9 +135,9 @@ export function HomePage() {
                 style={{
                   fontFamily: "var(--font-mono)",
                   fontWeight: 600,
-                  fontSize: 13,
-                  letterSpacing: "0.04em",
-                  marginTop: 4,
+                  fontSize: 13.5,
+                  letterSpacing: "0.05em",
+                  marginTop: 6,
                   opacity: 0.85,
                 }}
               >
@@ -110,36 +159,67 @@ export function HomePage() {
 
           <div
             style={{
-              fontSize: 26,
+              fontSize: 34,
               fontWeight: 600,
-              letterSpacing: "-0.02em",
-              lineHeight: 1.15,
-              marginTop: 18,
-              maxWidth: "90%",
+              letterSpacing: "-0.025em",
+              lineHeight: 1.1,
+              marginTop: 22,
+              maxWidth: "92%",
             }}
           >
             {headline}
           </div>
-          <div style={{ fontSize: 13.5, opacity: 0.85, marginTop: 8, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 15, opacity: 0.88, marginTop: 12, lineHeight: 1.45, maxWidth: "94%" }}>
             {s.blurb}
           </div>
 
           <StageMeter n={stage} />
 
+          {isCritical && (
+            <div
+              style={{
+                marginTop: 18,
+                paddingTop: 16,
+                borderTop: "1px solid rgba(255,255,255,.18)",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  fontFamily: "var(--font-mono)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  opacity: 0.8,
+                }}
+              >
+                {activeModule.countdownLabel}
+              </div>
+              <div className="countdown" style={{ marginTop: 6 }}>
+                <span className="num">{cd.h}</span>
+                <span className="lbl">H</span>
+                <span className="num">{cd.m}</span>
+                <span className="lbl">M</span>
+                <span className="num">{cd.s}</span>
+                <span className="lbl">S</span>
+              </div>
+            </div>
+          )}
+
           <div
             style={{
               display: "flex",
-              justifyContent: "space-between",
+              justifyContent: isCritical ? "flex-end" : "space-between",
               alignItems: "center",
-              marginTop: 14,
-              fontSize: 11,
-              opacity: 0.8,
+              marginTop: isCritical ? 14 : 18,
+              fontSize: 12,
+              opacity: 0.85,
               fontFamily: "var(--font-mono)",
+              letterSpacing: "0.04em",
             }}
           >
-            <span>NEXT UPDATE · {countdown}</span>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-              {t(previewLang, "seeAlert")} <IconChevronR size={12} />
+            {!isCritical && <span>NEXT UPDATE · {countdown}</span>}
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontWeight: 600 }}>
+              {t(previewLang, "seeAlert")} <IconChevronR size={13} />
             </span>
           </div>
         </div>
@@ -194,27 +274,6 @@ export function HomePage() {
           </button>
         )}
 
-        {/* Live signals */}
-        <div className="eyebrow" style={{ marginTop: 22, marginBottom: 10 }}>Live signals</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          {activeModule.metrics.map((m) => {
-            let value = m.value(stage);
-            if (weather) {
-              if (m.label.startsWith("Rainfall")) value = String(weather.precipitation1h);
-              if (m.label.startsWith("Wind"))     value = String(weather.windGusts);
-            }
-            return (
-              <Stat
-                key={m.label}
-                label={m.label}
-                value={value}
-                unit={m.unit}
-                tone={m.tone(stage)}
-              />
-            );
-          })}
-        </div>
-
         {/* Map preview */}
         <button
           onClick={() => navigate("/map")}
@@ -230,37 +289,26 @@ export function HomePage() {
             background: "var(--surface)",
           }}
         >
-          <div
-            style={{
-              position: "relative",
-              height: 140,
-              background: `
-                radial-gradient(60% 50% at 30% 50%, oklch(0.85 0.12 240 / .5), transparent 60%),
-                radial-gradient(40% 30% at 70% 60%, oklch(0.78 0.18 25 / .5), transparent 70%),
-                repeating-linear-gradient(135deg, var(--bg-soft) 0 6px, var(--surface-2) 6px 12px)
-              `,
-            }}
-          >
+          <div className="home-map-preview">
+            <div ref={previewMapEl} className="home-map-preview-tiles" />
+            <div className="home-map-preview-tint" />
             <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                background:
-                  "radial-gradient(circle at 45% 55%, transparent 0, transparent 14px, var(--surface) 14px, var(--surface) 16px, transparent 16px)",
-              }}
-            />
-            <div
-              style={{ position: "absolute", left: "45%", top: "55%", transform: "translate(-50%,-50%)" }}
+              style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)" }}
               className="user-loc"
             />
             <div
               style={{
                 position: "absolute",
-                top: 10,
-                left: 12,
+                top: 12,
+                left: 14,
+                padding: "4px 8px",
+                borderRadius: 6,
+                background: "rgba(255,255,255,.78)",
+                backdropFilter: "blur(6px)",
+                WebkitBackdropFilter: "blur(6px)",
                 fontSize: 10,
                 fontFamily: "var(--font-mono)",
-                color: "var(--ink-3)",
+                color: "var(--ink-2)",
                 textTransform: "uppercase",
                 letterSpacing: "0.06em",
               }}
