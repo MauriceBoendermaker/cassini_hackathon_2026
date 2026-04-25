@@ -10,7 +10,6 @@ import {
   IconClose,
   IconPhone,
   IconRoute,
-  IconShare,
 } from "../../components/icons/Icons";
 import { useAlert } from "../../state/AlertContext";
 import { tileLayerConfig } from "../../lib/map";
@@ -129,11 +128,6 @@ export function EvacuationPage() {
         left={
           <button className="icon-btn" onClick={() => navigate("/")} aria-label="Back">
             <IconChevronL size={18} />
-          </button>
-        }
-        right={
-          <button className="icon-btn" aria-label="Share">
-            <IconShare size={18} />
           </button>
         }
       />
