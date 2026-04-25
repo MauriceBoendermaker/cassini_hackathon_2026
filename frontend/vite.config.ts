@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      devOptions: { enabled: true, type: "module" },
+      devOptions: { enabled: false },
       includeAssets: ["favicon.svg", "apple-touch-icon.png", "icon-192.png", "icon-512.png"],
       manifest: {
         name: "Aegis — EU Flood Alert",
@@ -49,8 +49,20 @@ export default defineConfig({
     open: true,
     host: true,
     headers: {
-      "Content-Security-Policy":
-        "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.tile.openstreetmap.org; connect-src 'self' ws://localhost:5173; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';",
+      "Content-Security-Policy": [
+        "default-src 'self'",
+        // 'unsafe-inline' + 'unsafe-eval' required by @vitejs/plugin-react Fast Refresh in dev
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "font-src 'self' https://fonts.gstatic.com",
+        "img-src 'self' data: blob: https://*.tile.openstreetmap.org",
+        "connect-src 'self' ws://localhost:5173 wss://localhost:5173 https://nominatim.openstreetmap.org",
+        "worker-src 'self' blob:",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "frame-ancestors 'none'",
+      ].join("; "),
       "X-Frame-Options": "DENY",
       "X-Content-Type-Options": "nosniff",
       "Referrer-Policy": "strict-origin-when-cross-origin",
