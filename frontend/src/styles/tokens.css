@@ -1,0 +1,85 @@
+/* ============================================================
+   Aegis — Design tokens
+   Warm-cool neutrals, OKLCH-based EFAS 1–5 stage palette.
+   ============================================================ */
+
+:root {
+  /* Neutrals — warm-cool, very low saturation */
+  --bg:          #f6f5f2;
+  --bg-soft:     #eeece6;
+  --surface:     #ffffff;
+  --surface-2:   #faf9f6;
+  --line:        #e3e0d8;
+  --line-strong: #c9c5b8;
+  --ink:         #0b1d3a;
+  --ink-2:       #2a3a55;
+  --ink-3:       #5a657a;
+  --ink-4:       #8b94a4;
+
+  /* Brand */
+  --brand:       #0b1d3a;
+  --brand-2:     #142a52;
+  --brand-ink:   #ffffff;
+
+  /* "Ink card" — emphasis card backgrounds that must stay navy in both
+   * themes (var(--brand) inverts to white in dark mode, which breaks
+   * white-on-brand cards). Use these tokens for: critical action cards,
+   * profile cards, hero gradients, the install banner icon, etc. */
+  --ink-card:    #0b1d3a;
+  --ink-card-2:  #142a52;
+  --ink-card-fg: #ffffff;
+
+  /* EFAS stages — perceptually matched via OKLCH */
+  --s1: oklch(0.72 0.13 240);   /* informational blue */
+  --s2: oklch(0.82 0.15 95);    /* yellow */
+  --s3: oklch(0.72 0.17 55);    /* orange */
+  --s4: oklch(0.62 0.21 25);    /* red */
+  --s5: oklch(0.50 0.22 350);   /* deep magenta-red */
+
+  --s1-soft: oklch(0.94 0.04 240);
+  --s2-soft: oklch(0.96 0.06 95);
+  --s3-soft: oklch(0.94 0.06 55);
+  --s4-soft: oklch(0.93 0.06 25);
+  --s5-soft: oklch(0.92 0.06 350);
+
+  --ok:   oklch(0.65 0.14 145);
+  --info: oklch(0.62 0.13 240);
+
+  /* Radii */
+  --r-sm: 8px;
+  --r:    12px;
+  --r-lg: 18px;
+  --r-xl: 28px;
+
+  /* Shadows */
+  --shadow-1: 0 1px 2px rgba(11,29,58,.06), 0 1px 1px rgba(11,29,58,.04);
+  --shadow-2: 0 6px 24px rgba(11,29,58,.10), 0 2px 6px rgba(11,29,58,.06);
+  --shadow-3: 0 24px 60px rgba(11,29,58,.20), 0 8px 18px rgba(11,29,58,.10);
+
+  /* Typography */
+  --font-ui:   'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+
+  /* iOS safe-area fallbacks (inside the rendered phone frame) */
+  --sa-top:    44px;
+  --sa-bottom: 34px;
+}
+
+[data-theme="dark"] {
+  --bg:          #07111f;
+  --bg-soft:     #0b1729;
+  --surface:     #0f1c33;
+  --surface-2:   #132238;
+  --line:        #1e2d47;
+  --line-strong: #2c3e5f;
+  --ink:         #f4f5f8;
+  --ink-2:       #d6dbe4;
+  --ink-3:       #97a1b4;
+  --ink-4:       #6d7689;
+  --brand:       #ffffff;
+  --brand-2:     #e6ebf3;
+  --brand-ink:   #07111f;
+  --shadow-1: 0 1px 2px rgba(0,0,0,.4);
+  --shadow-2: 0 6px 24px rgba(0,0,0,.5);
+  --shadow-3: 0 24px 60px rgba(0,0,0,.6);
+}
