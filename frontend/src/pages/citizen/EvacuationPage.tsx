@@ -23,6 +23,8 @@ import {
   type RouteStep,
 } from "../../lib/route";
 import type { LatLng } from "../../lib/geo";
+import { useCompass } from "../../lib/useCompass";
+import { CompassRing } from "../../components/overlays/CompassRing";
 
 /** Demo destination: 300 m NE of the user's GPS. OSRM snaps this to the
  *  nearest road, so it doesn't matter that it's not on a named feature —
@@ -33,6 +35,7 @@ const EVAC_DISTANCE_M = 300;
 export function EvacuationPage() {
   const navigate = useNavigate();
   const { userPosition } = useAlert();
+  const { heading, needsPermission, requestPermission } = useCompass();
   const [route, setRoute] = useState<Route | null>(null);
   const [routeError, setRouteError] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -444,6 +447,20 @@ export function EvacuationPage() {
           onClose={() => setOverlayIdx(null)}
         />
       )}
+
+      {/* Compass — rotating ring around the phone-frame edge using the device
+          orientation sensor. Shown only when we have a real heading; iOS
+          surfaces a one-time gesture pill to grant the sensor permission. */}
+      {needsPermission && (
+        <button
+          type="button"
+          className="compass-enable"
+          onClick={() => void requestPermission()}
+        >
+          Enable compass
+        </button>
+      )}
+      {heading != null && <CompassRing heading={heading} />}
     </div>
   );
 }
