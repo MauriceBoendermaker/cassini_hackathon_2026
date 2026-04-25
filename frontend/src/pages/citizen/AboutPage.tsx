@@ -8,8 +8,10 @@ import {
   IconDrop,
   IconLayers,
   IconMapPin,
+  IconRoute,
   IconSatellite,
   IconShield,
+  IconUsers,
 } from "../../components/icons/Icons";
 
 export function AboutPage() {
@@ -38,10 +40,23 @@ export function AboutPage() {
       s: "EFAS · GloFAS · CDS ERA5 · local river-gauge networks",
     },
     {
+      Ic: IconRoute,
+      t: "OpenStreetMap",
+      s: "OSM tiles · Nominatim reverse geocoding · OSRM foot routing for evacuation paths",
+    },
+    {
       Ic: IconLayers,
       t: "AegisModule Standard",
       s: "Open disaster module format — flood, drought, wildfire, storm, heatwave",
     },
+  ];
+
+  const developers = [
+    "Maurice Boendermaker",
+    "Thijs van Steenbeek",
+    "Mark Salloum",
+    "Mathijs de Niet",
+    "Harika Ireddy",
   ];
 
   return (
@@ -139,21 +154,28 @@ export function AboutPage() {
         <div className="eyebrow" style={{ marginTop: 22, marginBottom: 10 }}>
           {activeModule.name} alert scale
         </div>
-        <div className="card" style={{ padding: "4px 14px" }}>
-          {activeModule.stages.map((s) => (
+        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+          {activeModule.stages.map((s, i, a) => (
             <div
               key={s.n}
               style={{
-                display: "flex",
-                gap: 12,
-                padding: "12px 0",
-                borderBottom: s.n < 5 ? "1px solid var(--line)" : "none",
+                padding: "14px 16px",
+                borderBottom: i < a.length - 1 ? "1px solid var(--line)" : "none",
               }}
             >
-              <StageBadge n={s.n} size="sm" short={s.short} label={s.label} />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13.5, fontWeight: 500 }}>{s.headline}</div>
-                <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2 }}>{s.blurb}</div>
+              <div>
+                <StageBadge n={s.n} size="sm" short={s.short} label={s.label} />
+              </div>
+              <div style={{ fontSize: 13.5, fontWeight: 600, marginTop: 8 }}>{s.headline}</div>
+              <div
+                style={{
+                  fontSize: 12,
+                  color: "var(--ink-3)",
+                  marginTop: 3,
+                  lineHeight: 1.5,
+                }}
+              >
+                {s.blurb}
               </div>
             </div>
           ))}
@@ -173,6 +195,60 @@ export function AboutPage() {
           Your location and household profile stay on-device. Only anonymised cell IDs are
           shared with civil protection during an active emergency. SOS submissions transmit
           your precise coordinates to the assigned rescue unit only.
+        </div>
+
+        <div className="eyebrow" style={{ marginTop: 22, marginBottom: 10 }}>Credits</div>
+        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+          <div
+            style={{
+              display: "flex",
+              gap: 14,
+              padding: 14,
+              borderBottom: "1px solid var(--line)",
+            }}
+          >
+            <div
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 10,
+                background: "var(--bg-soft)",
+                color: "var(--ink-2)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <IconUsers size={18} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>Built by</div>
+              <div
+                style={{
+                  fontSize: 12.5,
+                  color: "var(--ink-3)",
+                  marginTop: 4,
+                  lineHeight: 1.5,
+                }}
+              >
+                CASSINI Hackathon 2026 team — EU Space for Water
+              </div>
+            </div>
+          </div>
+          {developers.map((name, i) => (
+            <div
+              key={name}
+              style={{
+                padding: "12px 16px",
+                fontSize: 14,
+                fontWeight: 500,
+                borderBottom: i < developers.length - 1 ? "1px solid var(--line)" : "none",
+              }}
+            >
+              {name}
+            </div>
+          ))}
         </div>
 
         <div
