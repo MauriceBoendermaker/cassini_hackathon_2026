@@ -8,6 +8,7 @@ import { StatusBar } from "../../components/layout/StatusBar";
 import { HomeIndicator } from "../../components/layout/HomeIndicator";
 import {
   IconBell,
+  IconCamera,
   IconChevronR,
   IconCrosshair,
   IconGlobe,
@@ -23,7 +24,7 @@ export function OnboardingPage() {
   const { language, setLanguage, setHasOnboarded } = useSettings();
   const { requestLocation } = useAlert();
   const [step, setStep] = useState(0);
-  const total = 4;
+  const total = 5;
 
   const next = () => {
     // Step 1 is the location permission step — fire the real request when
@@ -32,6 +33,14 @@ export function OnboardingPage() {
     // Step 2 is the notifications step — request permission when advancing.
     if (step === 2 && "Notification" in window && Notification.permission === "default") {
       void Notification.requestPermission();
+    }
+    // Step 3 is the camera permission step — trigger getUserMedia so the
+    // browser shows its native prompt, then immediately stop the stream.
+    if (step === 3 && navigator.mediaDevices?.getUserMedia) {
+      void navigator.mediaDevices
+        .getUserMedia({ video: { facingMode: "environment" } })
+        .then((s) => s.getTracks().forEach((t) => t.stop()))
+        .catch(() => {/* denied — silent */});
     }
     if (step < total - 1) setStep(step + 1);
     else {
@@ -53,7 +62,8 @@ export function OnboardingPage() {
         {step === 0 && <ObWelcome lang={language} setLang={setLanguage} />}
         {step === 1 && <ObLocation />}
         {step === 2 && <ObNotifications />}
-        {step === 3 && <ObReady />}
+        {step === 3 && <ObCamera />}
+        {step === 4 && <ObReady />}
 
         <div style={{ flex: 1 }} />
 
@@ -150,7 +160,7 @@ function ObLocation() {
         </div>
         <div style={{ position: "absolute", bottom: 14, left: 14 }}>geo · gnss · galileo</div>
       </div>
-      <div className="eyebrow" style={{ marginTop: 22 }}>Permission · 1 of 2</div>
+      <div className="eyebrow" style={{ marginTop: 22 }}>Permission · 1 of 3</div>
       <h1 className="h-title" style={{ marginTop: 8 }}>Allow precise location</h1>
       <p className="h-sub" style={{ marginTop: 12 }}>
         Aegis only sends alerts that are relevant to you. Galileo precision lets us deliver
@@ -187,7 +197,7 @@ function ObNotifications() {
         </div>
         <div style={{ position: "absolute", bottom: 14, left: 14 }}>NL-Alert · gov push</div>
       </div>
-      <div className="eyebrow" style={{ marginTop: 22 }}>Permission · 2 of 2</div>
+      <div className="eyebrow" style={{ marginTop: 22 }}>Permission · 2 of 3</div>
       <h1 className="h-title" style={{ marginTop: 8 }}>Allow critical alerts</h1>
       <p className="h-sub" style={{ marginTop: 12 }}>
         Aegis uses critical-alert delivery — EFAS warnings cut through silent and Do Not
@@ -209,6 +219,36 @@ function ObNotifications() {
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function ObCamera() {
+  return (
+    <div>
+      <div className="permission-ill">
+        <div className="ill-ring">
+          <div className="ill-icon"><IconCamera size={28} /></div>
+        </div>
+        <div style={{ position: "absolute", bottom: 14, left: 14 }}>sos · damage report · evidence</div>
+      </div>
+      <div className="eyebrow" style={{ marginTop: 22 }}>Permission · 3 of 3</div>
+      <h1 className="h-title" style={{ marginTop: 8 }}>Allow camera access</h1>
+      <p className="h-sub" style={{ marginTop: 12 }}>
+        Aegis uses your camera only when you choose to attach a photo to an SOS or a
+        damage report. Photos are sent directly to the assigned rescue unit alongside
+        your Galileo-pinned coordinates — never uploaded otherwise.
+      </p>
+      <div className="card" style={{ marginTop: 18, background: "var(--bg-soft)" }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+          <IconInfo size={18} />
+          <div style={{ fontSize: 12.5, color: "var(--ink-2)", lineHeight: 1.5 }}>
+            The camera is never accessed in the background. Each photo requires a
+            tap inside Aegis, and you can revoke this permission any time in your
+            browser settings.
+          </div>
+        </div>
       </div>
     </div>
   );
