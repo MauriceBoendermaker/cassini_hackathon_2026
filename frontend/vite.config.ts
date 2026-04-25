@@ -56,7 +56,7 @@ export default defineConfig({
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com",
         "img-src 'self' data: blob: https://*.tile.openstreetmap.org https://api.maptiler.com",
-        "connect-src 'self' ws://localhost:5173 wss://localhost:5173 https://nominatim.openstreetmap.org",
+        "connect-src 'self' ws://localhost:5173 wss://localhost:5173 https://nominatim.openstreetmap.org https://routing.openstreetmap.de",
         "worker-src 'self' blob:",
         "object-src 'none'",
         "base-uri 'self'",
