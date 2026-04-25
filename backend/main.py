@@ -1,10 +1,13 @@
 """
 Aegis backend — Katwijk flood monitoring.
 
-Provides a single endpoint that aggregates:
-  - Real-time weather from Open-Meteo (free, no key needed)
-  - Simulated river-level with tidal variation
-  - A placeholder EFAS stage (override via query param ?efas_stage=N for demo)
+Endpoints:
+  - GET /api/conditions               aggregated real-time conditions
+  - GET /api/precipitation/today      hourly rainfall (mm/h) for today (Open-Meteo)
+  - GET /api/precipitation/copernicus historical hourly rainfall (mm/h) from
+                                      Copernicus ERA5-Land (~5-7 day lag)
+  - GET /api/precipitation/copernicus/debug  show active CDS endpoint
+  - GET /health                       liveness probe
 
 Run:  uvicorn main:app --reload
 Docs: http://localhost:8000/docs
@@ -14,10 +17,20 @@ import math
 from datetime import datetime, timezone
 
 import httpx
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
+from copernicus import active_endpoint, get_hourly_precipitation
+
 app = FastAPI(title="Aegis backend", version="0.1.0")
+
+
+@app.on_event("startup")
+async def _log_copernicus_endpoint() -> None:
+    info = active_endpoint()
+    print(f"[copernicus] endpoint={info['url']} source={info['source']}")
+    if info["warning"]:
+        print(f"[copernicus] WARNING: {info['warning']}")
 
 app.add_middleware(
     CORSMiddleware,
@@ -34,6 +47,13 @@ OPEN_METEO = (
     "&current=precipitation,wind_gusts_10m"
     "&hourly=precipitation&past_hours=1&forecast_hours=0"
     "&timezone=Europe%2FAmsterdam"
+)
+OPEN_METEO_TODAY = (
+    "https://api.open-meteo.com/v1/forecast"
+    f"?latitude={KATWIJK_LAT}&longitude={KATWIJK_LON}"
+    "&hourly=precipitation"
+    "&timezone=Europe%2FAmsterdam"
+    "&forecast_days=1"
 )
 
 
@@ -72,8 +92,6 @@ async def get_conditions(
 
     river = _river_level(precip_1h)
 
-    # Derive a simple EFAS-like stage from precipitation + river level.
-    # In production this would come from the Copernicus CDS EFAS API.
     if efas_stage is not None:
         stage = efas_stage
     elif river > 1.2 or precip_1h > 30:
@@ -94,6 +112,60 @@ async def get_conditions(
         "last_updated": datetime.now(timezone.utc).isoformat(),
         "source": "Open-Meteo + tidal model (Rijkswaterstaat integration pending)",
     }
+
+
+@app.get("/api/precipitation/today")
+async def precipitation_today():
+    """Hourly rainfall (mm/h) for Katwijk, today, Europe/Amsterdam time."""
+    try:
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            resp = await client.get(OPEN_METEO_TODAY)
+            resp.raise_for_status()
+            data = resp.json()
+    except httpx.HTTPError as exc:
+        raise HTTPException(status_code=502, detail=f"Open-Meteo request failed: {exc}") from exc
+
+    times: list[str] = data.get("hourly", {}).get("time", [])
+    precip: list[float | None] = data.get("hourly", {}).get("precipitation", [])
+
+    hourly = [
+        {"hour_local": t.split("T")[1] if "T" in t else t, "mm": round(p or 0.0, 3)}
+        for t, p in zip(times, precip)
+    ]
+    values = [p or 0.0 for p in precip]
+
+    return {
+        "date_local": times[0].split("T")[0] if times else None,
+        "timezone": data.get("timezone", "Europe/Amsterdam"),
+        "location": {"lat": KATWIJK_LAT, "lon": KATWIJK_LON, "name": "Katwijk"},
+        "hourly_mm_per_hour": hourly,
+        "max_mm_per_hour": round(max(values, default=0.0), 3),
+        "total_mm": round(sum(values), 3),
+        "source": "Open-Meteo",
+    }
+
+
+@app.get("/api/precipitation/copernicus/debug")
+async def precipitation_copernicus_debug():
+    """Show which Copernicus endpoint the backend is wired to."""
+    return active_endpoint()
+
+
+@app.get("/api/precipitation/copernicus")
+async def precipitation_copernicus(
+    force_refresh: bool = Query(default=False, description="Bypass the in-memory cache."),
+):
+    """Hourly rainfall (mm/h) over Katwijk from Copernicus ERA5-Land.
+
+    Reanalysis product with ~5-7 day publication lag — for live data use
+    /api/precipitation/today instead. First call for a given target date
+    is slow (CDS queues the retrieval — typically 30 s to a few minutes);
+    subsequent calls hit the in-memory cache.
+    """
+    try:
+        return await get_hourly_precipitation(force_refresh=force_refresh)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"CDS retrieval failed: {exc}") from exc
 
 
 @app.get("/health")
