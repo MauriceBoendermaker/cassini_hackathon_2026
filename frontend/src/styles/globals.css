@@ -441,6 +441,19 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
   transform-origin: 50% 50%;
 }
 
+/* Pinned action bar at the bottom of the evacuation page — stays put while
+   the step list scrolls above it. */
+.evac-actions {
+  flex-shrink: 0;
+  display: flex;
+  gap: 10px;
+  padding: 12px 18px 14px;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, .04);
+}
+[data-theme="dark"] .evac-actions { background: var(--surface); border-top-color: var(--line); }
+
 /* Destination marker for evacuation routes — green circle with white "B"
    label so it's visually distinct from the user-loc start dot. */
 .route-end-pin {

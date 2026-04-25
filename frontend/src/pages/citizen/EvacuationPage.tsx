@@ -352,9 +352,13 @@ export function EvacuationPage() {
           </>
         )}
 
-        {/* Action buttons */}
+      </div>
+
+      {/* Pinned action bar — sibling of .scroll so it stays at the bottom of
+          the phone viewport while the step list scrolls. */}
+      <div className="evac-actions">
         {navigating ? (
-          <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
+          <>
             <button className="btn secondary" style={{ flex: 1 }} onClick={stopNavigation}>
               Stop
             </button>
@@ -371,9 +375,9 @@ export function EvacuationPage() {
                 <IconArrow size={16} /> Next step
               </button>
             )}
-          </div>
+          </>
         ) : (
-          <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
+          <>
             <a className="btn secondary" style={{ flex: 1 }} href="tel:112">
               <IconPhone size={16} /> Call 112
             </a>
@@ -385,7 +389,7 @@ export function EvacuationPage() {
             >
               <IconRoute size={16} /> Start
             </button>
-          </div>
+          </>
         )}
       </div>
 
