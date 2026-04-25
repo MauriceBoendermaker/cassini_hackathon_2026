@@ -9,6 +9,7 @@ import { EvacuationPage } from "./pages/citizen/EvacuationPage";
 import { HistoryPage } from "./pages/citizen/HistoryPage";
 import { SettingsPage } from "./pages/citizen/SettingsPage";
 import { AboutPage } from "./pages/citizen/AboutPage";
+import { ModulesPage } from "./pages/citizen/ModulesPage";
 import { FirefighterPage } from "./pages/responder/FirefighterPage";
 import { useSettings } from "./state/SettingsContext";
 
@@ -37,6 +38,7 @@ export default function App() {
         <Route path="/history"     element={<HistoryPage />} />
         <Route path="/settings"    element={<SettingsPage />} />
         <Route path="/about"       element={<AboutPage />} />
+        <Route path="/modules"     element={<ModulesPage />} />
         <Route path="/ops"         element={<FirefighterPage />} />
         <Route path="/ops/*"       element={<FirefighterPage />} />
       </Route>
