@@ -138,13 +138,15 @@ export function EvacuationPage() {
         }
       />
 
-      {/* Navigation instruction banner */}
+      {/* Navigation instruction banner — pinned to a stable layout so the
+          page below doesn't shift when stepping through. Each row reserves
+          space whether or not its content is present. */}
       {navigating && currentStepObj && (
         <div
           style={{
             background: isLastStep ? "oklch(0.45 0.14 145)" : "var(--ink-card)",
             color: "var(--ink-card-fg)",
-            padding: "16px 20px 18px",
+            padding: "12px 18px 14px",
             flexShrink: 0,
           }}
         >
@@ -161,52 +163,79 @@ export function EvacuationPage() {
           </div>
           <div
             style={{
-              fontSize: 21,
+              fontSize: 19,
               fontWeight: 700,
-              marginTop: 5,
+              marginTop: 2,
               letterSpacing: "-0.02em",
               lineHeight: 1.2,
+              display: "-webkit-box",
+              WebkitBoxOrient: "vertical",
+              WebkitLineClamp: 2,
+              overflow: "hidden",
             }}
           >
             {currentStepObj.instruction}
           </div>
-          {currentStepObj.name && (
-            <div style={{ fontSize: 13, opacity: 0.75, marginTop: 4 }}>
-              {currentStepObj.name}
-            </div>
-          )}
-          {!isLastStep && nextStepObj && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "baseline",
-                gap: 6,
-                marginTop: 10,
-                opacity: 0.85,
-              }}
-            >
+          <div
+            style={{
+              fontSize: 12.5,
+              opacity: 0.75,
+              marginTop: 2,
+              minHeight: 17,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {currentStepObj.name || " "}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "baseline",
+              gap: 6,
+              marginTop: 6,
+              opacity: 0.85,
+              minHeight: 22,
+            }}
+          >
+            {!isLastStep && nextStepObj ? (
+              <>
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontFamily: "var(--font-mono)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                  }}
+                >
+                  Next in
+                </span>
+                <span
+                  style={{
+                    fontSize: 17,
+                    fontWeight: 600,
+                    fontFamily: "var(--font-mono)",
+                    letterSpacing: "-0.02em",
+                  }}
+                >
+                  {formatDistance(nextStepObj.distance)}
+                </span>
+              </>
+            ) : (
               <span
                 style={{
-                  fontSize: 10,
+                  fontSize: 11,
                   fontFamily: "var(--font-mono)",
                   textTransform: "uppercase",
                   letterSpacing: "0.06em",
+                  opacity: 0.85,
                 }}
               >
-                Next in
+                Final step
               </span>
-              <span
-                style={{
-                  fontSize: 20,
-                  fontWeight: 600,
-                  fontFamily: "var(--font-mono)",
-                  letterSpacing: "-0.02em",
-                }}
-              >
-                {formatDistance(nextStepObj.distance)}
-              </span>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
 
@@ -390,9 +419,9 @@ export function EvacuationPage() {
           </>
         ) : (
           <>
-            <a className="btn secondary" style={{ flex: 1 }} href="tel:112">
+            <button className="btn secondary" style={{ flex: 1 }} type="button">
               <IconPhone size={16} /> Call 112
-            </a>
+            </button>
             <button
               className="btn primary"
               style={{ flex: 1 }}
