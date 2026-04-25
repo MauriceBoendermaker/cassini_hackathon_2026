@@ -241,7 +241,7 @@ export function SettingsPage() {
             textAlign: "center",
           }}
         >
-          Aegis · v1.0.0-rc · CASSINI Hackathon 2026
+          Aegis · v1.0.0 · CASSINI Hackathon 2026
         </div>
       </div>
 

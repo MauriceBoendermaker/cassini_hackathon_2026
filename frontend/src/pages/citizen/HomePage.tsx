@@ -379,7 +379,7 @@ export function HomePage() {
             textAlign: "center",
           }}
         >
-          <div>Aegis · v1.0.0-rc · build 2026.04.26</div>
+          <div>Aegis · v1.0.0 · build 2026.04.26</div>
           <div>operated by EU Civil Protection · funded by CASSINI</div>
         </div>
       </div>
