@@ -74,6 +74,8 @@ export function TweaksPanel() {
     setAllowed(shouldShowTweaks());
   }, []);
 
+  const scenarioActive = scenarioT > 0 || scenarioPlaying;
+
   if (!allowed) return null;
 
   if (!open) {
@@ -136,9 +138,9 @@ export function TweaksPanel() {
           <button
             type="button"
             className="twk-toggle"
-            data-on={scenarioPlaying ? "1" : "0"}
-            onClick={() => setScenarioPlaying(!scenarioPlaying)}
-            aria-checked={scenarioPlaying}
+            data-on={scenarioActive ? "1" : "0"}
+            onClick={() => (scenarioActive ? resetScenario() : setScenarioPlaying(true))}
+            aria-checked={scenarioActive}
             role="switch"
           >
             <i />
