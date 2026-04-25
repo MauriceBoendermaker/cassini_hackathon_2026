@@ -33,10 +33,10 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/\{s\}\.tile\.openstreetmap\.org\//,
+            urlPattern: /^https:\/\/([abc]\.tile\.openstreetmap\.org|api\.maptiler\.com\/maps)\//,
             handler: "CacheFirst",
             options: {
-              cacheName: "osm-tiles",
+              cacheName: "map-tiles",
               expiration: { maxEntries: 400, maxAgeSeconds: 60 * 60 * 24 * 30 },
             },
           },
@@ -55,7 +55,7 @@ export default defineConfig({
         "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com",
-        "img-src 'self' data: blob: https://*.tile.openstreetmap.org",
+        "img-src 'self' data: blob: https://*.tile.openstreetmap.org https://api.maptiler.com",
         "connect-src 'self' ws://localhost:5173 wss://localhost:5173 https://nominatim.openstreetmap.org",
         "worker-src 'self' blob:",
         "object-src 'none'",
