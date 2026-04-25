@@ -21,6 +21,7 @@ import {
 } from "../../components/icons/Icons";
 import { FLOOD_LAYERS, SOS_PINS, FF_UNITS, VALENCIA } from "../../lib/demo";
 import { tileLayerConfig } from "../../lib/map";
+import { CompassRing } from "../../components/overlays/CompassRing";
 
 // Flood-specific overlays
 const ROAD_CLOSURES: [number, number][][] = [
@@ -514,6 +515,10 @@ export function MapPage() {
           onClose={() => setShowLayers(false)}
         />
       )}
+
+      {/* Static compass-bezel ring inset around the phone-frame edge —
+          decorative instrument-face overlay matching the directions page. */}
+      <CompassRing />
     </div>
   );
 }
