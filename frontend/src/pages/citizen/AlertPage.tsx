@@ -30,13 +30,20 @@ export function AlertPage() {
     { Ic: IconUsers, title: "Account for neighbours", sub: "Especially elderly and children" },
   ];
 
+  // Stage 2 (yellow) needs dark UI — the rest use white. rgb is the channel
+  // triple we interpolate transparency from, so accents (chips, card tints)
+  // look consistent against whatever the stage background happens to be.
+  const isLightStage = stage === 2;
+  const rgb = isLightStage ? "0,0,0" : "255,255,255";
+  const borderRgba = `rgba(${rgb},.2)`;
+
   return (
     <div className="fullbleed-stage" data-stage={stage}>
-      <StatusBar tone="dark" />
-      <div className="app-bar" style={{ color: "#fff" }}>
+      <StatusBar tone={isLightStage ? "light" : "dark"} />
+      <div className="app-bar">
         <button
           className="icon-btn ghost"
-          style={{ color: "#fff", borderColor: "rgba(255,255,255,.2)" }}
+          style={{ color: "inherit", borderColor: borderRgba }}
           onClick={() => navigate("/")}
           aria-label="Back"
         >
@@ -55,12 +62,12 @@ export function AlertPage() {
             ACTIVE ALERT · {s.short}
           </div>
         </div>
-        <button className="icon-btn ghost" style={{ color: "#fff" }} aria-label="Share">
+        <button className="icon-btn ghost" style={{ color: "inherit" }} aria-label="Share">
           <IconShare size={18} />
         </button>
       </div>
 
-      <div style={{ flex: 1, padding: "8px 24px 24px", overflowY: "auto", color: "#fff" }}>
+      <div style={{ flex: 1, padding: "8px 24px 24px", overflowY: "auto" }}>
         <div
           style={{
             fontSize: 11,
@@ -85,9 +92,7 @@ export function AlertPage() {
           {s.headline}
         </h1>
         <p style={{ fontSize: 15, opacity: 0.9, marginTop: 14, lineHeight: 1.55 }}>
-          {s.blurb} Heavy rainfall (80–120 mm/12h) over the Túria basin has triggered
-          flash-flood conditions in the Poyo ravine. Civil Protection has activated
-          Phase {Math.min(stage, 5)}.
+          {s.blurb} Civil Protection has activated Phase {Math.min(stage, 5)}.
         </p>
 
         {/* Countdown */}
@@ -96,8 +101,8 @@ export function AlertPage() {
             marginTop: 22,
             padding: 18,
             borderRadius: 18,
-            background: "rgba(0,0,0,.22)",
-            border: "1px solid rgba(255,255,255,.14)",
+            background: `rgba(${rgb === "0,0,0" ? "0,0,0" : "0,0,0"},.22)`,
+            border: `1px solid rgba(${rgb},.14)`,
           }}
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -116,9 +121,9 @@ export function AlertPage() {
               <span
                 className="chip"
                 style={{
-                  background: "rgba(255,255,255,.12)",
-                  color: "#fff",
-                  borderColor: "rgba(255,255,255,.2)",
+                  background: `rgba(${rgb},.12)`,
+                  color: "inherit",
+                  borderColor: borderRgba,
                 }}
               >
                 <IconWifiOff size={11} /> Galileo
@@ -143,7 +148,7 @@ export function AlertPage() {
         {/* What to do */}
         <div
           className="eyebrow"
-          style={{ color: "rgba(255,255,255,.7)", marginTop: 22, marginBottom: 10 }}
+          style={{ color: "inherit", opacity: 0.7, marginTop: 22, marginBottom: 10 }}
         >
           What to do now
         </div>
@@ -155,9 +160,9 @@ export function AlertPage() {
                 display: "flex",
                 gap: 12,
                 padding: 14,
-                background: "rgba(255,255,255,.10)",
+                background: `rgba(${rgb},.10)`,
                 borderRadius: 14,
-                border: "1px solid rgba(255,255,255,.12)",
+                border: `1px solid rgba(${rgb},.12)`,
               }}
             >
               <div
@@ -165,7 +170,7 @@ export function AlertPage() {
                   width: 36,
                   height: 36,
                   borderRadius: 10,
-                  background: "rgba(255,255,255,.14)",
+                  background: `rgba(${rgb},.14)`,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -199,7 +204,7 @@ export function AlertPage() {
           }}
         >
           <div>Source · Copernicus EMS · EFAS feed</div>
-          <div>Co-issued · AEMET · Generalitat Valenciana</div>
+          <div>Co-issued · National civil protection</div>
           <div>Pass · Sentinel-1A · 13:51 CEST</div>
         </div>
       </div>
@@ -209,9 +214,9 @@ export function AlertPage() {
           className="btn secondary"
           style={{
             flex: 1,
-            background: "rgba(255,255,255,.16)",
-            color: "#fff",
-            border: "1px solid rgba(255,255,255,.22)",
+            background: `rgba(${rgb},.16)`,
+            color: "inherit",
+            border: `1px solid rgba(${rgb},.22)`,
           }}
           onClick={() => navigate("/evacuation")}
         >

@@ -10,11 +10,13 @@ import {
 } from "react";
 import {
   STAGES,
+  VALENCIA,
   stageAtScenario,
   eventsAtScenario,
   type StageNum,
   type ScenarioEvent,
 } from "../lib/demo";
+import { getCurrentPosition, reverseGeocode, type LatLng } from "../lib/geo";
 
 type AlertState = {
   /** Manual stage. */
@@ -33,6 +35,18 @@ type AlertState = {
 
   /** Current scenario event (most recent at t). */
   currentEvent: ScenarioEvent | null;
+
+  /** Real user position from browser geolocation, or null if unknown.
+   * When null, pages fall back to the Valencia demo anchor. */
+  userPosition: LatLng | null;
+  /** Human-readable place name for the user's position (e.g. "Amsterdam"),
+   * or null if reverse geocoding hasn't resolved yet. */
+  userPlaceName: string | null;
+  /** Upper-case ISO country code (e.g. "NL"), or null if unknown. */
+  userCountry: string | null;
+  /** Requests geolocation and updates the state — called from onboarding or
+   * settings when the user opts in. */
+  requestLocation: () => Promise<void>;
 
   /** Push notification visibility. */
   pushVisible: boolean;
@@ -55,8 +69,37 @@ export function AlertProvider({ children }: { children: ReactNode }) {
   const [scenarioPlaying, setScenarioPlayingState] = useState<boolean>(false);
   const [pushVisible, setPushVisible] = useState<boolean>(false);
   const [installVisible, setInstallVisible] = useState<boolean>(false);
+  const [userPosition, setUserPosition] = useState<LatLng | null>(null);
+  const [userPlaceName, setUserPlaceName] = useState<string | null>(null);
+  const [userCountry, setUserCountry] = useState<string | null>(null);
   const lastStageRef = useRef<StageNum>(1);
   const pushTimerRef = useRef<number | null>(null);
+
+  const requestLocation = useCallback(async () => {
+    const pos = await getCurrentPosition();
+    if (!pos) return;
+    setUserPosition(pos);
+    const { label, country } = await reverseGeocode(pos);
+    if (label) setUserPlaceName(label);
+    if (country) setUserCountry(country);
+  }, []);
+
+  // Best-effort silent geolocation on mount — only succeeds if the user
+  // has previously granted permission (or the browser auto-allows). No
+  // permission prompt is forced; the onboarding flow handles that.
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !navigator.permissions) {
+      return;
+    }
+    navigator.permissions
+      .query({ name: "geolocation" as PermissionName })
+      .then((res) => {
+        if (res.state === "granted") void requestLocation();
+      })
+      .catch(() => {
+        /* permissions API not supported — skip */
+      });
+  }, [requestLocation]);
 
   const scenarioStage = scenarioT > 0 ? stageAtScenario(scenarioT) : null;
   const effectiveStage: StageNum = (scenarioStage ?? stage) as StageNum;
@@ -132,8 +175,9 @@ export function AlertProvider({ children }: { children: ReactNode }) {
   const showInstall = useCallback(() => setInstallVisible(true), []);
   const hideInstall = useCallback(() => setInstallVisible(false), []);
 
-  // Reference STAGES once so unused-import check is happy.
+  // Reference STAGES + VALENCIA so unused-import check is happy.
   void STAGES;
+  void VALENCIA;
 
   const value: AlertState = {
     stage,
@@ -144,6 +188,10 @@ export function AlertProvider({ children }: { children: ReactNode }) {
     setScenarioPlaying,
     effectiveStage,
     currentEvent,
+    userPosition,
+    userPlaceName,
+    userCountry,
+    requestLocation,
     pushVisible,
     showPush,
     hidePush,

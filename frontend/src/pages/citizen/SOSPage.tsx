@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAlert } from "../../state/AlertContext";
 import { useSettings } from "../../state/SettingsContext";
 import { StatusBar } from "../../components/layout/StatusBar";
 import { HomeIndicator } from "../../components/layout/HomeIndicator";
@@ -10,10 +11,17 @@ type Phase = "idle" | "holding" | "sending" | "sent";
 
 export function SOSPage() {
   const { online } = useSettings();
+  const { userPosition } = useAlert();
   const navigate = useNavigate();
   const [phase, setPhase] = useState<Phase>("idle");
   const [hold, setHold] = useState(0);
   const timerRef = useRef<number | null>(null);
+
+  // Show the user's real coords when geolocation is available, fall back
+  // to the Valencia demo anchor otherwise.
+  const [lat, lng] = userPosition
+    ? [userPosition.lat, userPosition.lng]
+    : VALENCIA.user;
 
   const start = () => {
     setPhase("holding");
@@ -217,8 +225,8 @@ export function SOSPage() {
           justifyContent: "space-between",
         }}
       >
-        <span>LAT {fmtCoord(VALENCIA.user[0])}</span>
-        <span>LNG {fmtCoord(VALENCIA.user[1])}</span>
+        <span>LAT {fmtCoord(lat)}</span>
+        <span>LNG {fmtCoord(lng)}</span>
         <span>±1.2 M</span>
       </div>
       <HomeIndicator />

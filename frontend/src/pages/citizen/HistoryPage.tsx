@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AppBar } from "../../components/layout/AppBar";
 import { StageBadge } from "../../components/ui/StageBadge";
 import { IconChevronL, IconFilter, IconTriangle } from "../../components/icons/Icons";
-import { NOTIFICATIONS, STAGE_COLORS } from "../../lib/demo";
+import { formatRelative, NOTIFICATIONS, STAGE_COLORS } from "../../lib/demo";
 
 type Filter = "all" | "active" | "cleared";
 
@@ -76,7 +76,7 @@ export function HistoryPage() {
                       fontFamily: "var(--font-mono)",
                     }}
                   >
-                    {n.date} · {n.t}
+                    {formatRelative(n.minutesAgo)}
                   </div>
                 </div>
                 <div style={{ fontSize: 14, fontWeight: 600, marginTop: 8 }}>{n.title}</div>

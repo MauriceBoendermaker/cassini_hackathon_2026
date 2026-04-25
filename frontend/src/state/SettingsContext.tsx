@@ -48,11 +48,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [previewLang, setPreviewLangState] = useState<string>("EN");
   const [online, setOnlineState] = useState<boolean>(() => readBool("aegis.online", true));
   const [dark, setDarkState] = useState<boolean>(() => readBool("aegis.dark", false));
-  const [role, setRoleState] = useState<Role>(() => {
-    if (typeof localStorage === "undefined") return "citizen";
-    const v = localStorage.getItem("aegis.role");
-    return v === "firefighter" ? "firefighter" : "citizen";
-  });
+  // Role is session-scoped — every fresh load starts as citizen, regardless
+  // of how the previous session ended. Keeps the default demo experience
+  // predictable (citizen home, `/` as the landing page).
+  const [role, setRoleState] = useState<Role>("citizen");
   const [hasOnboarded, setHasOnboardedState] = useState<boolean>(() =>
     readBool("aegis.onboarded", false),
   );
@@ -74,7 +73,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   };
   const setRole = (r: Role) => {
     setRoleState(r);
-    localStorage.setItem("aegis.role", r);
   };
   const setHasOnboarded = (v: boolean) => {
     setHasOnboardedState(v);

@@ -420,6 +420,8 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
   flex: 1; display: flex; flex-direction: column;
   color: #fff;
 }
+.fullbleed-stage[data-stage="1"] { background: linear-gradient(180deg, oklch(0.62 0.12 240) 0%, oklch(0.38 0.14 245) 100%); }
+.fullbleed-stage[data-stage="2"] { background: linear-gradient(180deg, oklch(0.78 0.15 95) 0%, oklch(0.58 0.16 70) 100%); color: #1a1304; }
 .fullbleed-stage[data-stage="3"] { background: linear-gradient(180deg, oklch(0.65 0.17 55) 0%, oklch(0.42 0.18 35) 100%); }
 .fullbleed-stage[data-stage="4"] { background: linear-gradient(180deg, oklch(0.55 0.21 25) 0%, oklch(0.35 0.18 18) 100%); }
 .fullbleed-stage[data-stage="5"] { background: linear-gradient(180deg, oklch(0.45 0.22 350) 0%, oklch(0.22 0.15 350) 100%); }
