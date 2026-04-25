@@ -8,6 +8,7 @@ import { PushStack } from "../overlays/PushStack";
 import { IOSInstallBanner } from "../overlays/IOSInstallBanner";
 import { ScenarioRibbon } from "../overlays/ScenarioRibbon";
 import { TweaksPanel } from "../overlays/TweaksPanel";
+import { CompassOverlay } from "../overlays/CompassOverlay";
 
 /**
  * PhoneShell — the device-dressed canvas every screen renders inside.
@@ -34,9 +35,15 @@ export function PhoneShell() {
   // Tab bar hidden on full-bleed and (for now) firefighter ops view.
   const showTabBar = !onboarding && !pathname.startsWith("/alert") && !pathname.startsWith("/sos");
 
+  // Compass-bezel ring traces the phone-frame edge on pages where heading is
+  // useful — the live map and the directions/evacuation page. Adding the
+  // `has-compass` modifier insets .app-viewport by the bezel width so the
+  // ring sits in the gap between the frame and the content.
+  const showCompass = pathname === "/evacuation" || pathname.startsWith("/map");
+
   return (
     <div className="app-stage">
-      <div className="app-frame">
+      <div className={`app-frame${showCompass ? " has-compass" : ""}`}>
         <div className="app-viewport" data-stage={effectiveStage}>
           {!isFullBleed && <StatusBar tone={statusTone} />}
 
@@ -50,6 +57,7 @@ export function PhoneShell() {
           <IOSInstallBanner />
           {(scenarioPlaying || scenarioT > 0) && <ScenarioRibbon />}
         </div>
+        {showCompass && <CompassOverlay />}
       </div>
 
       <TweaksPanel />
