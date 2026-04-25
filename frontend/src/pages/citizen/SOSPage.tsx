@@ -150,11 +150,11 @@ export function SOSPage() {
             <>
               <div
                 className="ripple"
-                style={{ color: "rgba(255,255,255,.45)", width: 220, height: 220 }}
+                style={{ color: "rgba(255,255,255,.45)" }}
               />
               <div
                 className="ripple r2"
-                style={{ color: "rgba(255,255,255,.45)", width: 220, height: 220 }}
+                style={{ color: "rgba(255,255,255,.45)" }}
               />
             </>
           )}

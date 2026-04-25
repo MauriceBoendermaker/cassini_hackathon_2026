@@ -922,11 +922,17 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
 
 /* Animations */
 @keyframes ripple {
-  0%   { transform: scale(0.4); opacity: 0.7; }
-  100% { transform: scale(2.6); opacity: 0; }
+  0%   { transform: translate(-50%, -50%) scale(0.4); opacity: 0.7; }
+  100% { transform: translate(-50%, -50%) scale(2.6); opacity: 0; }
 }
 .ripple {
-  position: absolute; inset: 0; margin: auto;
+  /* Center on the parent's center point regardless of the ripple's own
+   * size, so the keyframe scale animates around the visual center. The
+   * `inset: 0; margin: auto` pattern this replaces broke when consumers
+   * passed an inline width/height different from the parent — one ring
+   * would visibly drift off-axis. */
+  position: absolute;
+  top: 50%; left: 50%;
   width: 200px; height: 200px; border-radius: 50%;
   border: 2px solid currentColor;
   animation: ripple 2.4s cubic-bezier(.2,.6,.4,1) infinite;
