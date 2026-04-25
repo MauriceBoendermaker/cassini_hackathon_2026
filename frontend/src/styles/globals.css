@@ -45,14 +45,12 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
   flex-direction: column;
 }
 
-@media (max-width: 520px) {
-  .app-stage { padding: 0; background: var(--bg); }
-  .app-frame { border-radius: 0; box-shadow: none; max-width: 100%; min-height: 100dvh; }
-}
-
-/* Installed PWA — drop all device dressing so the OS's real status bar
- * and home indicator show through. Content respects real safe-area insets. */
-@media (display-mode: standalone) {
+/* Drop the fake device dressing on any real mobile viewport OR when
+ * running as an installed PWA. The phone-frame mockup is a desktop-only
+ * pitch visual — on a real phone, the user's actual OS chrome (browser
+ * address bar in Safari/Chrome, or system status bar + home indicator in
+ * standalone mode) is what we want to see. */
+@media (max-width: 520px), (display-mode: standalone) {
   :root {
     --sa-top: env(safe-area-inset-top, 0px);
     --sa-bottom: env(safe-area-inset-bottom, 0px);
