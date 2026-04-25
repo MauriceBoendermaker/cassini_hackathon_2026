@@ -88,7 +88,7 @@ export function FirefighterPage() {
         style={{
           background: "var(--ink-card)",
           color: "var(--ink-card-fg)",
-          padding: "6px 14px",
+          padding: "calc(env(safe-area-inset-top, 0px) + 6px) 14px 6px",
           display: "flex",
           alignItems: "center",
           gap: 10,

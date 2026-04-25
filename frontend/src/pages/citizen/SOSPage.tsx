@@ -256,7 +256,7 @@ function SosSent({ online, isReport, onHome }: { online: boolean; isReport: bool
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          padding: "32px 24px",
+          padding: "calc(env(safe-area-inset-top, 0px) + 32px) 24px 32px",
           color: "#fff",
         }}
       >
