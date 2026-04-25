@@ -231,22 +231,20 @@ function ObCamera() {
         <div className="ill-ring">
           <div className="ill-icon"><IconCamera size={28} /></div>
         </div>
-        <div style={{ position: "absolute", bottom: 14, left: 14 }}>sos · damage report · evidence</div>
+        <div style={{ position: "absolute", bottom: 14, left: 14 }}>compass · ar overlay</div>
       </div>
       <div className="eyebrow" style={{ marginTop: 22 }}>Permission · 3 of 3</div>
       <h1 className="h-title" style={{ marginTop: 8 }}>Allow camera access</h1>
       <p className="h-sub" style={{ marginTop: 12 }}>
-        Aegis uses your camera only when you choose to attach a photo to an SOS or a
-        damage report. Photos are sent directly to the assigned rescue unit alongside
-        your Galileo-pinned coordinates — never uploaded otherwise.
+        Aegis uses your camera only to power the compass overlay — when you point
+        your phone, directions appear on top of the live camera view.
       </p>
       <div className="card" style={{ marginTop: 18, background: "var(--bg-soft)" }}>
         <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
           <IconInfo size={18} />
           <div style={{ fontSize: 12.5, color: "var(--ink-2)", lineHeight: 1.5 }}>
-            The camera is never accessed in the background. Each photo requires a
-            tap inside Aegis, and you can revoke this permission any time in your
-            browser settings.
+            The camera is only active while you're using the compass view. It's
+            never accessed in the background and nothing is recorded or uploaded.
           </div>
         </div>
       </div>
