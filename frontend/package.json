@@ -2,6 +2,15 @@
   "name": "aegis-water-frontend",
   "private": true,
   "version": "0.1.0",
+  "description": "Early warning and rescue coordination for floods, powered by Copernicus and Galileo.",
+  "homepage": "https://aegis.mauriceb.nl",
+  "contributors": [
+    { "name": "Maurice Boendermaker" },
+    { "name": "Thijs van Steenbeek" },
+    { "name": "Mathijs de Niet" },
+    { "name": "Mark Salloum" },
+    { "name": "Harika Ireddy" }
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",
