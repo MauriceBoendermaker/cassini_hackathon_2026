@@ -32,9 +32,12 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
 .app-stage {
   position: relative;
   /* Lock to exact viewport height so the frame can't grow beyond it.
-   * `dvh` shrinks when the mobile address bar or keyboard is visible.
-   * `100vh` is the fallback for browsers without dvh support. */
+   *  - `100vh` includes mobile browser chrome (over-tall on iOS Safari).
+   *  - `100svh` is the *small* viewport — always fits, never overflows.
+   *  - `100dvh` adapts dynamically as the address bar shows / hides.
+   * Browsers pick the last supported value, so we degrade vh → svh → dvh. */
   height: 100vh;
+  height: 100svh;
   height: 100dvh;
   display: flex;
   align-items: stretch;
@@ -87,9 +90,11 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
   }
   .app-stage { padding: 0; background: var(--bg); }
   .app-frame { border-radius: 0; box-shadow: none; max-width: 100%; }
-  /* Push our own chrome inside the device safe areas. */
-  .app-bar { padding-top: max(6px, env(safe-area-inset-top)); }
-  .offline-bar { padding-top: max(4px, env(safe-area-inset-top)); }
+  /* Push our own chrome inside the device safe areas. The +8 / +6 buffer
+   * ensures content always clears the iPhone Dynamic Island even when
+   * env() under-reports (some Safari + non-installed PWA combos). */
+  .app-bar { padding-top: calc(env(safe-area-inset-top, 0px) + 12px); }
+  .offline-bar { padding-top: calc(env(safe-area-inset-top, 0px) + 6px); }
   .offline-bar + .app-bar { padding-top: 6px; }    /* offline-bar already cleared the notch */
   .tab-bar { padding-bottom: max(8px, env(safe-area-inset-bottom)); }
   .fullbleed-stage { padding-bottom: env(safe-area-inset-bottom); }
