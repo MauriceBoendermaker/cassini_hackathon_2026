@@ -42,8 +42,16 @@ export async function reverseGeocode(
     url.searchParams.set("lon", p.lng.toFixed(5));
     url.searchParams.set("zoom", "12");
     url.searchParams.set("addressdetails", "1");
+    // Nominatim usage policy requires app identification via User-Agent or
+    // Referer. Browsers forbid overriding User-Agent so we supply both:
+    // User-Agent is honoured in non-browser contexts (Node, future proxy);
+    // referrer is what actually reaches Nominatim from the browser.
     const r = await fetch(url.toString(), {
-      headers: { "Accept-Language": "en" },
+      headers: {
+        "Accept-Language": "en",
+        "User-Agent": "Aegis/1.0 (https://aegis.mauriceb.nl; info@cestvu.com)",
+      },
+      referrer: "https://aegis.mauriceb.nl/",
     });
     if (!r.ok) return { label: null, country: null };
     const data = (await r.json()) as { address?: NominatimAddress };

@@ -18,6 +18,11 @@ import {
 } from "../lib/demo";
 import { getCurrentPosition, reverseGeocode, type LatLng } from "../lib/geo";
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+}
+
 type AlertState = {
   /** Manual stage. */
   stage: StageNum;
@@ -53,10 +58,16 @@ type AlertState = {
   showPush: () => void;
   hidePush: () => void;
 
-  /** iOS install banner visibility. */
+  /** Install banner visibility. */
   installVisible: boolean;
+  /** True when the browser has fired beforeinstallprompt and the native
+   * dialog can be triggered (Android/Chrome). False on iOS, where manual
+   * share-sheet steps are shown instead. */
+  nativeInstallReady: boolean;
   showInstall: () => void;
   hideInstall: () => void;
+  /** Calls the deferred beforeinstallprompt on Android/Chrome; no-op on iOS. */
+  triggerInstall: () => Promise<void>;
 
   resetScenario: () => void;
 };
@@ -69,6 +80,8 @@ export function AlertProvider({ children }: { children: ReactNode }) {
   const [scenarioPlaying, setScenarioPlayingState] = useState<boolean>(false);
   const [pushVisible, setPushVisible] = useState<boolean>(false);
   const [installVisible, setInstallVisible] = useState<boolean>(false);
+  const [nativeInstallReady, setNativeInstallReady] = useState<boolean>(false);
+  const deferredPromptRef = useRef<BeforeInstallPromptEvent | null>(null);
   const [userPosition, setUserPosition] = useState<LatLng | null>(null);
   const [userPlaceName, setUserPlaceName] = useState<string | null>(null);
   const [userCountry, setUserCountry] = useState<string | null>(null);
@@ -172,6 +185,42 @@ export function AlertProvider({ children }: { children: ReactNode }) {
   }, []);
   const hidePush = useCallback(() => setPushVisible(false), []);
 
+  // Capture the browser's native install prompt (Android/Chrome) so we can
+  // trigger it on demand. Prevents it from appearing unsolicited.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      deferredPromptRef.current = e as BeforeInstallPromptEvent;
+      setNativeInstallReady(true);
+      setInstallVisible(true);
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  // iOS has no beforeinstallprompt — detect Safari on iPhone/iPad and show
+  // the manual share-sheet instructions when not already installed.
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    const isIOS =
+      /iPad|iPhone|iPod/.test(ua) &&
+      !(window as unknown as { MSStream?: unknown }).MSStream;
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (navigator as unknown as { standalone?: boolean }).standalone === true;
+    if (isIOS && !isStandalone) setInstallVisible(true);
+  }, []);
+
+  const triggerInstall = useCallback(async () => {
+    const prompt = deferredPromptRef.current;
+    if (!prompt) return;
+    await prompt.prompt();
+    const { outcome } = await prompt.userChoice;
+    deferredPromptRef.current = null;
+    setNativeInstallReady(false);
+    if (outcome === "accepted") setInstallVisible(false);
+  }, []);
+
   const showInstall = useCallback(() => setInstallVisible(true), []);
   const hideInstall = useCallback(() => setInstallVisible(false), []);
 
@@ -196,8 +245,10 @@ export function AlertProvider({ children }: { children: ReactNode }) {
     showPush,
     hidePush,
     installVisible,
+    nativeInstallReady,
     showInstall,
     hideInstall,
+    triggerInstall,
     resetScenario,
   };
 

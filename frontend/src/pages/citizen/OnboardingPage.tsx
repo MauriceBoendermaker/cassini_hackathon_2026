@@ -29,6 +29,10 @@ export function OnboardingPage() {
     // Step 1 is the location permission step — fire the real request when
     // the user advances past it (browser shows the native prompt).
     if (step === 1) void requestLocation();
+    // Step 2 is the notifications step — request permission when advancing.
+    if (step === 2 && "Notification" in window && Notification.permission === "default") {
+      void Notification.requestPermission();
+    }
     if (step < total - 1) setStep(step + 1);
     else {
       setHasOnboarded(true);

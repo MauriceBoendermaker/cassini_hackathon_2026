@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      devOptions: { enabled: true, type: "module" },
+      devOptions: { enabled: false },
       includeAssets: ["favicon.svg", "apple-touch-icon.png", "icon-192.png", "icon-512.png"],
       manifest: {
         name: "Aegis — EU Flood Alert",
@@ -33,10 +33,10 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/\{s\}\.tile\.openstreetmap\.org\//,
+            urlPattern: /^https:\/\/([abc]\.tile\.openstreetmap\.org|api\.maptiler\.com\/maps)\//,
             handler: "CacheFirst",
             options: {
-              cacheName: "osm-tiles",
+              cacheName: "map-tiles",
               expiration: { maxEntries: 400, maxAgeSeconds: 60 * 60 * 24 * 30 },
             },
           },
@@ -44,5 +44,29 @@ export default defineConfig({
       },
     }),
   ],
-  server: { port: 5173, open: true, host: true },
+  server: {
+    port: 5173,
+    open: true,
+    host: true,
+    headers: {
+      "Content-Security-Policy": [
+        "default-src 'self'",
+        // 'unsafe-inline' + 'unsafe-eval' required by @vitejs/plugin-react Fast Refresh in dev
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "font-src 'self' https://fonts.gstatic.com",
+        "img-src 'self' data: blob: https://*.tile.openstreetmap.org https://api.maptiler.com",
+        "connect-src 'self' ws://localhost:5173 wss://localhost:5173 https://nominatim.openstreetmap.org",
+        "worker-src 'self' blob:",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "frame-ancestors 'none'",
+      ].join("; "),
+      "X-Frame-Options": "DENY",
+      "X-Content-Type-Options": "nosniff",
+      "Referrer-Policy": "strict-origin-when-cross-origin",
+      "Permissions-Policy": "geolocation=(self), camera=(), microphone=(), payment=(), usb=()",
+    },
+  },
 });

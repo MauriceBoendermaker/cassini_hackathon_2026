@@ -2,6 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAlert } from "../../state/AlertContext";
 import { useSettings } from "../../state/SettingsContext";
+import { AlertTiersSheet } from "./sheets/AlertTiersSheet";
+import { AlertAreaSheet } from "./sheets/AlertAreaSheet";
+import { VulnerableHouseholdSheet } from "./sheets/VulnerableHouseholdSheet";
+import { EmergencyContactsSheet } from "./sheets/EmergencyContactsSheet";
 import { AppBar } from "../../components/layout/AppBar";
 import { AegisLogo } from "../../components/brand/AegisLogo";
 import {
@@ -25,9 +29,16 @@ import { EU_LANGUAGES } from "../../lib/demo";
 
 export function SettingsPage() {
   const navigate = useNavigate();
-  const { language, setLanguage, dark, setDark, online, setOnline, role, setRole } = useSettings();
+  const {
+    language, setLanguage, dark, setDark, online, setOnline, role, setRole,
+    alertTiers, alertTiersDND, alertRadiusKm, householdMembers, emergencyContacts,
+  } = useSettings();
   const { userPlaceName, userCountry, userPosition, requestLocation } = useAlert();
   const [showLang, setShowLang] = useState(false);
+  const [showAlertTiers, setShowAlertTiers] = useState(false);
+  const [showAlertArea, setShowAlertArea] = useState(false);
+  const [showHousehold, setShowHousehold] = useState(false);
+  const [showContacts, setShowContacts] = useState(false);
 
   const cur = EU_LANGUAGES.find((l) => l.code === language) ?? EU_LANGUAGES[5];
   const profileLine = userPlaceName
@@ -35,11 +46,25 @@ export function SettingsPage() {
     : userPosition
       ? "YOUR AREA"
       : "QUART DE POBLET · ES";
-  const areaLine = userPlaceName
-    ? `5 km radius · ${userPlaceName}`
-    : userPosition
-      ? "5 km radius · your area"
-      : "5 km radius · Quart de Poblet";
+  const placeFallback = userPlaceName ?? (userPosition ? "your area" : "Quart de Poblet");
+  const areaLine = `${alertRadiusKm} km radius · ${placeFallback}`;
+
+  const tiersSub = (() => {
+    const on = alertTiers.filter(Boolean).length;
+    if (on === 0) return "All stages disabled";
+    const first = alertTiers.findIndex(Boolean) + 1;
+    const last = alertTiers.lastIndexOf(true) + 1;
+    const range = on === 5 ? "EFAS 1–5" : on === 1 ? `EFAS ${first}` : `EFAS ${first}–${last}`;
+    return `${range} enabled${alertTiersDND ? " · critical breaks DND" : ""}`;
+  })();
+
+  const householdSub = householdMembers.length === 0
+    ? "Add household members for triage"
+    : `${householdMembers.length} member${householdMembers.length > 1 ? "s" : ""} added`;
+
+  const contactsSub = emergencyContacts.length === 0
+    ? "112 only"
+    : `${emergencyContacts.length + 1} contacts · 112 + ${emergencyContacts[0].name}`;
   const locationSub = userPlaceName
     ? `Sharing ${userPlaceName}${userCountry ? `, ${userCountry}` : ""}`
     : userPosition
@@ -147,21 +172,38 @@ export function SettingsPage() {
               </div>
               <IconChevronR size={16} style={{ color: "var(--ink-3)" }} />
             </div>
-            {[
-              { Ic: IconBell, t: "Alert tiers",         s: "EFAS 1–5 enabled · critical breaks DND" },
-              { Ic: IconMapPin, t: "Alert area",        s: areaLine },
-              { Ic: IconHand, t: "Vulnerable household", s: "Add household members for triage" },
-              { Ic: IconPhone, t: "Emergency contacts",  s: "2 contacts · 112 + family" },
-            ].map((r, i) => (
-              <div key={i} className="list-row">
-                <div className="lr-icon"><r.Ic size={18} /></div>
-                <div className="lr-body">
-                  <div className="lr-title">{r.t}</div>
-                  <div className="lr-sub">{r.s}</div>
-                </div>
-                <IconChevronR size={16} style={{ color: "var(--ink-3)" }} />
+            <div className="list-row" onClick={() => setShowAlertTiers(true)}>
+              <div className="lr-icon"><IconBell size={18} /></div>
+              <div className="lr-body">
+                <div className="lr-title">Alert tiers</div>
+                <div className="lr-sub">{tiersSub}</div>
               </div>
-            ))}
+              <IconChevronR size={16} style={{ color: "var(--ink-3)" }} />
+            </div>
+            <div className="list-row" onClick={() => setShowAlertArea(true)}>
+              <div className="lr-icon"><IconMapPin size={18} /></div>
+              <div className="lr-body">
+                <div className="lr-title">Alert area</div>
+                <div className="lr-sub">{areaLine}</div>
+              </div>
+              <IconChevronR size={16} style={{ color: "var(--ink-3)" }} />
+            </div>
+            <div className="list-row" onClick={() => setShowHousehold(true)}>
+              <div className="lr-icon"><IconHand size={18} /></div>
+              <div className="lr-body">
+                <div className="lr-title">Vulnerable household</div>
+                <div className="lr-sub">{householdSub}</div>
+              </div>
+              <IconChevronR size={16} style={{ color: "var(--ink-3)" }} />
+            </div>
+            <div className="list-row" onClick={() => setShowContacts(true)}>
+              <div className="lr-icon"><IconPhone size={18} /></div>
+              <div className="lr-body">
+                <div className="lr-title">Emergency contacts</div>
+                <div className="lr-sub">{contactsSub}</div>
+              </div>
+              <IconChevronR size={16} style={{ color: "var(--ink-3)" }} />
+            </div>
           </div>
         </div>
 
@@ -226,6 +268,10 @@ export function SettingsPage() {
           onClose={() => setShowLang(false)}
         />
       )}
+      {showAlertTiers && <AlertTiersSheet onClose={() => setShowAlertTiers(false)} />}
+      {showAlertArea && <AlertAreaSheet onClose={() => setShowAlertArea(false)} />}
+      {showHousehold && <VulnerableHouseholdSheet onClose={() => setShowHousehold(false)} />}
+      {showContacts && <EmergencyContactsSheet onClose={() => setShowContacts(false)} />}
     </div>
   );
 }

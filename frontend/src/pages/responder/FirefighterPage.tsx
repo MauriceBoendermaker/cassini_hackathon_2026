@@ -15,6 +15,7 @@ import {
   IconShield,
 } from "../../components/icons/Icons";
 import { FF_UNITS, FLOOD_LAYERS, SOS_PINS, VALENCIA, type SOSPin } from "../../lib/demo";
+import { tileLayerConfig } from "../../lib/map";
 
 export function FirefighterPage() {
   const { online } = useSettings();
@@ -31,7 +32,8 @@ export function FirefighterPage() {
       zoomControl: false,
       attributionControl: false,
     });
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+    const { url, options } = tileLayerConfig();
+    L.tileLayer(url, options).addTo(map);
     mapRef.current = map;
 
     FLOOD_LAYERS.severe.forEach((c) => {

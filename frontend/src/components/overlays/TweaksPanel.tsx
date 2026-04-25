@@ -43,12 +43,6 @@ export function TweaksPanel() {
   const [open, setOpen] = useState(false);
   const [allowed, setAllowed] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    setAllowed(shouldShowTweaks());
-  }, []);
-
-  if (!allowed) return null;
   const {
     stage,
     setStage,
@@ -71,6 +65,12 @@ export function TweaksPanel() {
     setPreviewLang,
     setHasOnboarded,
   } = useSettings();
+
+  useEffect(() => {
+    setAllowed(shouldShowTweaks());
+  }, []);
+
+  if (!allowed) return null;
 
   if (!open) {
     return (

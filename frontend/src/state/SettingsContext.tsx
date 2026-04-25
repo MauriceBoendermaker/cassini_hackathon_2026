@@ -6,8 +6,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import type { HouseholdMember, Contact } from "../types/settings";
 
 export type Role = "citizen" | "firefighter";
+export type AlertRadius = 1 | 5 | 10 | 25 | 50;
 
 type Settings = {
   /** Two-letter EU language code (settings) — full 24 supported. */
@@ -29,6 +31,24 @@ type Settings = {
 
   hasOnboarded: boolean;
   setHasOnboarded: (v: boolean) => void;
+
+  /** Which EFAS stages trigger notifications (index 0 = stage 1 … index 4 = stage 5). */
+  alertTiers: boolean[];
+  setAlertTiers: (v: boolean[]) => void;
+
+  /** Stages 4 & 5 override Do Not Disturb. */
+  alertTiersDND: boolean;
+  setAlertTiersDND: (v: boolean) => void;
+
+  /** Alert radius preset in km. */
+  alertRadiusKm: AlertRadius;
+  setAlertRadiusKm: (v: AlertRadius) => void;
+
+  householdMembers: HouseholdMember[];
+  setHouseholdMembers: (v: HouseholdMember[]) => void;
+
+  emergencyContacts: Contact[];
+  setEmergencyContacts: (v: Contact[]) => void;
 };
 
 const Ctx = createContext<Settings | null>(null);
@@ -56,6 +76,42 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     readBool("aegis.onboarded", false),
   );
 
+  const [alertTiers, setAlertTiersState] = useState<boolean[]>(() => {
+    try {
+      const v = localStorage.getItem("aegis.alertTiers");
+      if (v) return JSON.parse(v) as boolean[];
+    } catch {}
+    return [false, true, true, true, true];
+  });
+
+  const [alertTiersDND, setAlertTiersDNDState] = useState<boolean>(() =>
+    readBool("aegis.alertTiersDND", true),
+  );
+
+  const [alertRadiusKm, setAlertRadiusKmState] = useState<AlertRadius>(() => {
+    const v = localStorage.getItem("aegis.alertRadius");
+    const n = Number(v);
+    return ([1, 5, 10, 25, 50] as AlertRadius[]).includes(n as AlertRadius)
+      ? (n as AlertRadius)
+      : 5;
+  });
+
+  const [householdMembers, setHouseholdMembersState] = useState<HouseholdMember[]>(() => {
+    try {
+      const v = localStorage.getItem("aegis.household");
+      if (v) return JSON.parse(v) as HouseholdMember[];
+    } catch {}
+    return [];
+  });
+
+  const [emergencyContacts, setEmergencyContactsState] = useState<Contact[]>(() => {
+    try {
+      const v = localStorage.getItem("aegis.contacts");
+      if (v) return JSON.parse(v) as Contact[];
+    } catch {}
+    return [];
+  });
+
   const setLanguage = (c: string) => {
     setLanguageState(c);
     localStorage.setItem("aegis.lang", c);
@@ -77,6 +133,27 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const setHasOnboarded = (v: boolean) => {
     setHasOnboardedState(v);
     localStorage.setItem("aegis.onboarded", v ? "1" : "0");
+  };
+
+  const setAlertTiers = (v: boolean[]) => {
+    setAlertTiersState(v);
+    localStorage.setItem("aegis.alertTiers", JSON.stringify(v));
+  };
+  const setAlertTiersDND = (v: boolean) => {
+    setAlertTiersDNDState(v);
+    localStorage.setItem("aegis.alertTiersDND", v ? "1" : "0");
+  };
+  const setAlertRadiusKm = (v: AlertRadius) => {
+    setAlertRadiusKmState(v);
+    localStorage.setItem("aegis.alertRadius", String(v));
+  };
+  const setHouseholdMembers = (v: HouseholdMember[]) => {
+    setHouseholdMembersState(v);
+    localStorage.setItem("aegis.household", JSON.stringify(v));
+  };
+  const setEmergencyContacts = (v: Contact[]) => {
+    setEmergencyContactsState(v);
+    localStorage.setItem("aegis.contacts", JSON.stringify(v));
   };
 
   // Apply theme to documentElement (matches design's data-theme="dark").
@@ -102,8 +179,19 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setRole,
       hasOnboarded,
       setHasOnboarded,
+      alertTiers,
+      setAlertTiers,
+      alertTiersDND,
+      setAlertTiersDND,
+      alertRadiusKm,
+      setAlertRadiusKm,
+      householdMembers,
+      setHouseholdMembers,
+      emergencyContacts,
+      setEmergencyContacts,
     }),
-    [language, previewLang, online, dark, role, hasOnboarded],
+    [language, previewLang, online, dark, role, hasOnboarded,
+     alertTiers, alertTiersDND, alertRadiusKm, householdMembers, emergencyContacts],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
