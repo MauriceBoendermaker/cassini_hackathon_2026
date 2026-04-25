@@ -205,7 +205,7 @@ export function MapPage() {
         });
       }
     }
-  }, [effectiveStage, role, layers.primaryZones, isFlood]);
+  }, [effectiveStage, role, layers.primaryZones, isFlood, userPosition]);
 
   // Secondary overlays (road closures / water restriction zones)
   useEffect(() => {
@@ -413,7 +413,19 @@ export function MapPage() {
         </div>
 
         <div className="map-info-card">
-          <div className="card" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div
+            className="card"
+            role="button"
+            tabIndex={0}
+            onClick={() => navigate("/alert")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                navigate("/alert");
+              }
+            }}
+            style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}
+          >
             <StageBadge
               n={effectiveStage}
               size="sm"

@@ -390,7 +390,7 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
   pointer-events: auto;
 }
 .map-legend {
-  position: absolute; left: 14px; bottom: 14px; z-index: 800;
+  position: absolute; left: 14px; top: 14px; z-index: 800;
   background: rgba(255,255,255,.95); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   border-radius: 12px; border: 1px solid var(--line);
   padding: 10px 12px; font-size: 11px; color: var(--ink-2);

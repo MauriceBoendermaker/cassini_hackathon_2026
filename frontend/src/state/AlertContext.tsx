@@ -11,6 +11,7 @@ import {
 import {
   stageAtScenario,
   eventsAtScenario,
+  VALENCIA,
   type StageNum,
   type ScenarioEvent,
 } from "../lib/demo";
@@ -88,19 +89,19 @@ export function AlertProvider({ children }: { children: ReactNode }) {
   const [installVisible, setInstallVisible] = useState<boolean>(false);
   const [nativeInstallReady, setNativeInstallReady] = useState<boolean>(false);
   const deferredPromptRef = useRef<BeforeInstallPromptEvent | null>(null);
-  const [userPosition, setUserPosition] = useState<LatLng | null>(null);
-  const [userPlaceName, setUserPlaceName] = useState<string | null>(null);
-  const [userCountry, setUserCountry] = useState<string | null>(null);
+  const [realUserPosition, setRealUserPosition] = useState<LatLng | null>(null);
+  const [realUserPlaceName, setRealUserPlaceName] = useState<string | null>(null);
+  const [realUserCountry, setRealUserCountry] = useState<string | null>(null);
   const lastStageRef = useRef<StageNum>(1);
   const pushTimerRef = useRef<number | null>(null);
 
   const requestLocation = useCallback(async () => {
     const pos = await getCurrentPosition();
     if (!pos) return;
-    setUserPosition(pos);
+    setRealUserPosition(pos);
     const { label, country } = await reverseGeocode(pos);
-    if (label) setUserPlaceName(label);
-    if (country) setUserCountry(country);
+    if (label) setRealUserPlaceName(label);
+    if (country) setRealUserCountry(country);
   }, []);
 
   // Request geolocation on mount — triggers the browser permission popup on
@@ -111,6 +112,17 @@ export function AlertProvider({ children }: { children: ReactNode }) {
 
   const scenarioStage = scenarioT > 0 ? stageAtScenario(scenarioT) : null;
   const effectiveStage: StageNum = (scenarioStage ?? stage) as StageNum;
+
+  // While the Valencia 2024 demo scenario is active (playing or paused mid-run),
+  // override the real GPS values so every page teleports to Valencia. Reverts
+  // to the real position on resetScenario.
+  const scenarioActive = scenarioT > 0 || scenarioPlaying;
+  const userPosition = useMemo<LatLng | null>(
+    () => (scenarioActive ? { lat: VALENCIA.user[0], lng: VALENCIA.user[1] } : realUserPosition),
+    [scenarioActive, realUserPosition],
+  );
+  const userPlaceName = scenarioActive ? "Valencia" : realUserPlaceName;
+  const userCountry = scenarioActive ? "ES" : realUserCountry;
 
   const currentEvent = useMemo<ScenarioEvent | null>(() => {
     const events = eventsAtScenario(scenarioT);
