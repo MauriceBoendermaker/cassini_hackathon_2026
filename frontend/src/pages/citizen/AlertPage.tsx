@@ -20,7 +20,6 @@ import {
   IconLightning,
   IconMap,
   IconRoute,
-  IconShare,
   IconWifiOff,
 } from "../../components/icons/Icons";
 
@@ -76,9 +75,7 @@ export function AlertPage() {
             ACTIVE ALERT · {s.short}
           </div>
         </div>
-        <button className="icon-btn ghost" style={{ color: "inherit" }} aria-label="Share">
-          <IconShare size={18} />
-        </button>
+        <div style={{ width: 38 }} />
       </div>
 
       <div style={{ flex: 1, padding: "8px 24px 24px", overflowY: "auto" }}>

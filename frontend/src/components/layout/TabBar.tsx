@@ -5,8 +5,6 @@ import {
   IconLightning,
   IconLayers,
   IconSettings,
-  IconUsers,
-  IconPhone,
 } from "../icons/Icons";
 import type { Role } from "../../state/SettingsContext";
 
@@ -20,21 +18,18 @@ type TabItem = {
 
 function citizenTabs(): TabItem[] {
   return [
-    { k: "home",    label: "Home",    to: "/",        Icon: IconHome },
-    { k: "map",     label: "Map",     to: "/map",     Icon: IconMap },
-    { k: "sos",     label: "SOS",     to: "/sos",     Icon: IconLightning, sos: true },
-    { k: "modules", label: "Modules", to: "/modules", Icon: IconLayers },
-    { k: "settings",label: "More",    to: "/settings",Icon: IconSettings },
+    { k: "home",    label: "Home",     to: "/",         Icon: IconHome },
+    { k: "map",     label: "Map",      to: "/map",      Icon: IconMap },
+    { k: "sos",     label: "SOS",      to: "/sos",      Icon: IconLightning, sos: true },
+    { k: "modules", label: "Modules",  to: "/modules",  Icon: IconLayers },
+    { k: "settings",label: "Settings", to: "/settings", Icon: IconSettings },
   ];
 }
 
 function firefighterTabs(): TabItem[] {
   return [
-    { k: "ops",   label: "Ops",   to: "/ops",          Icon: IconMap },
-    { k: "units", label: "Units", to: "/ops/units",    Icon: IconUsers },
-    { k: "queue", label: "Queue", to: "/ops/queue",    Icon: IconLightning },
-    { k: "comms", label: "Comms", to: "/ops/comms",    Icon: IconPhone },
-    { k: "more",  label: "More",  to: "/ops/settings", Icon: IconSettings },
+    { k: "ops",      label: "Ops",      to: "/ops",      Icon: IconMap },
+    { k: "settings", label: "Settings", to: "/settings", Icon: IconSettings },
   ];
 }
 

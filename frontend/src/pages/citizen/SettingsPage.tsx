@@ -7,7 +7,6 @@ import { AlertAreaSheet } from "./sheets/AlertAreaSheet";
 import { VulnerableHouseholdSheet } from "./sheets/VulnerableHouseholdSheet";
 import { EmergencyContactsSheet } from "./sheets/EmergencyContactsSheet";
 import { AppBar } from "../../components/layout/AppBar";
-import { AegisLogo } from "../../components/brand/AegisLogo";
 import {
   IconBell,
   IconChevronL,
@@ -33,7 +32,7 @@ export function SettingsPage() {
     language, setLanguage, dark, setDark, online, setOnline, role, setRole,
     alertTiers, alertTiersDND, alertRadiusKm, householdMembers, emergencyContacts,
   } = useSettings();
-  const { userPlaceName, userCountry, userPosition } = useAlert();
+  const { userPlaceName, userPosition } = useAlert();
   const [showLang, setShowLang] = useState(false);
   const [showAlertTiers, setShowAlertTiers] = useState(false);
   const [showAlertArea, setShowAlertArea] = useState(false);
@@ -41,11 +40,6 @@ export function SettingsPage() {
   const [showContacts, setShowContacts] = useState(false);
 
   const cur = EU_LANGUAGES.find((l) => l.code === language) ?? EU_LANGUAGES[5];
-  const profileLine = userPlaceName
-    ? `${userPlaceName} · ${userCountry ?? ""}`.trim().replace(/·\s*$/, "").toUpperCase()
-    : userPosition
-      ? "YOUR AREA"
-      : "—";
   const placeFallback = userPlaceName ?? (userPosition ? "your area" : "—");
   const areaLine = `${alertRadiusKm} km radius · ${placeFallback}`;
 
@@ -78,38 +72,7 @@ export function SettingsPage() {
         }
       />
       <div className="scroll">
-        {/* Profile */}
-        <div
-          className="card"
-          style={{
-            background: "var(--ink-card)",
-            color: "var(--ink-card-fg)",
-            borderColor: "transparent",
-            display: "flex",
-            alignItems: "center",
-            gap: 14,
-          }}
-        >
-          <AegisLogo size={40} color="#fff" mark="var(--ink-card)" />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 15, fontWeight: 600 }}>Profile · resident</div>
-            <div
-              style={{
-                fontSize: 12,
-                opacity: 0.7,
-                fontFamily: "var(--font-mono)",
-                textTransform: "uppercase",
-                letterSpacing: "0.04em",
-                marginTop: 2,
-              }}
-            >
-              {profileLine}
-            </div>
-          </div>
-          <IconChevronR size={18} />
-        </div>
-
-        <div className="eyebrow" style={{ marginTop: 22, marginBottom: 6 }}>Preferences</div>
+        <div className="eyebrow" style={{ marginTop: 4, marginBottom: 6 }}>Preferences</div>
         <div className="card" style={{ padding: "4px 14px" }}>
           <div className="list">
             <div className="list-row" onClick={() => setShowLang(true)}>
@@ -203,20 +166,45 @@ export function SettingsPage() {
             >
               <div className="lr-icon"><IconShield size={18} /></div>
               <div className="lr-body">
-                <div className="lr-title">View as</div>
-                <div className="lr-sub">Switch between citizen & firefighter</div>
+                <div className="lr-title">Rescue mode</div>
+                <div className="lr-sub">
+                  {role === "firefighter" ? "On · firefighter ops view" : "Off · citizen view"}
+                </div>
               </div>
-              <div className="seg" onClick={(e) => e.stopPropagation()}>
-                <button className={role === "citizen" ? "active" : ""} onClick={() => setRole("citizen")}>
-                  Citizen
-                </button>
-                <button
-                  className={role === "firefighter" ? "active" : ""}
-                  onClick={() => { setRole("firefighter"); navigate("/ops"); }}
-                >
-                  Rescue
-                </button>
-              </div>
+              <button
+                role="switch"
+                aria-checked={role === "firefighter"}
+                aria-label="Rescue mode"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setRole(role === "firefighter" ? "citizen" : "firefighter");
+                }}
+                style={{
+                  width: 34,
+                  height: 20,
+                  borderRadius: 10,
+                  background: role === "firefighter" ? "var(--ink-card)" : "var(--line-strong, #c5c2bb)",
+                  border: "none",
+                  cursor: "pointer",
+                  position: "relative",
+                  flexShrink: 0,
+                  transition: "background .15s",
+                }}
+              >
+                <span
+                  style={{
+                    position: "absolute",
+                    top: 3,
+                    left: role === "firefighter" ? 17 : 3,
+                    width: 14,
+                    height: 14,
+                    borderRadius: "50%",
+                    background: "#fff",
+                    transition: "left .15s",
+                    display: "block",
+                  }}
+                />
+              </button>
             </div>
             <div className="list-row" onClick={() => navigate("/about")}>
               <div className="lr-icon"><IconInfo size={18} /></div>

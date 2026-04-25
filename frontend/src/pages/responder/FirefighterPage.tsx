@@ -7,7 +7,6 @@ import { Stat } from "../../components/ui/Stat";
 import {
   IconChevronL,
   IconClose,
-  IconFilter,
   IconMinus,
   IconPhone,
   IconPlus,
@@ -124,11 +123,6 @@ export function FirefighterPage() {
         left={
           <button className="icon-btn" onClick={() => navigate("/")} aria-label="Back">
             <IconChevronL size={18} />
-          </button>
-        }
-        right={
-          <button className="icon-btn" aria-label="Filter">
-            <IconFilter size={18} />
           </button>
         }
       />
