@@ -123,7 +123,7 @@ export function EvacuationPage() {
   const destinationLabel = lastStep?.name || "Higher ground";
 
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative" }}>
       <AppBar
         sub="EVACUATION ROUTE"
         title={destinationLabel}

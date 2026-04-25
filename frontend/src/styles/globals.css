@@ -464,24 +464,24 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
   color: #fff;
   pointer-events: none;
   background: #0b0b0b;
-  padding: 0 4px;
+  padding: 0 3px;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1;
-  font-size: 11px;
+  font-size: 9px;
   line-height: 1;
 }
 .cr-n {
-  top: 1px; left: 50%;
+  top: 0; left: 50%;
   transform: translateX(-50%);
   color: #e23b3b;
-  font-size: 13px;
-  padding: 0 5px;
+  font-size: 10px;
+  padding: 0 4px;
 }
-.cr-e { top: 50%; right: 1px; transform: translateY(-50%); }
-.cr-s { bottom: 1px; left: 50%; transform: translateX(-50%); }
-.cr-w { top: 50%; left: 1px; transform: translateY(-50%); }
+.cr-e { top: 50%; right: 0; transform: translateY(-50%); }
+.cr-s { bottom: 0; left: 50%; transform: translateX(-50%); }
+.cr-w { top: 50%; left: 0; transform: translateY(-50%); }
 
 /* Pinned action bar at the bottom of the evacuation page — stays put while
    the step list scrolls above it. */

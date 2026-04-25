@@ -39,8 +39,8 @@ export function CompassRing() {
 
   const W = size.w;
   const H = size.h;
-  const bandWidth = 14;
-  const outerRadius = 30;
+  const bandWidth = 9;
+  const outerRadius = 28;
   const pathRadius = Math.max(0, outerRadius - bandWidth / 2);
 
   // Centerline rect for the band path.
@@ -51,11 +51,12 @@ export function CompassRing() {
 
   // Normalise the rounded-rect path to `tickPathLength` units so the
   // dasharray creates an exact tick count regardless of geometry.
-  // 360 ticks → 1 per ~degree on a circular equivalent.
   const tickPathLength = 360;
-  const minorDash = "0.4 0.6"; // 360 minor ticks
-  const majorDash = "1.2 43.8"; // 8 major ticks (one per intercardinal slot)
-  // 360 / 8 = 45 — so each cycle is 45 units, 1.2 dash + 43.8 gap = 45.
+  // 24 minor ticks — every 15° equivalent on a circle. Spaced enough to
+  // read as instrument tick marks without looking like a dense stripe.
+  const minorDash = "0.6 14.4";
+  // 8 major ticks at the four cardinal + four intercardinal slots.
+  const majorDash = "1.4 43.6";
 
   return (
     <div ref={ref} className="compass-ring" aria-hidden="true">
@@ -76,7 +77,7 @@ export function CompassRing() {
           stroke="#0b0b0b"
           strokeWidth={bandWidth}
         />
-        {/* Minor tick imprint — every ~1°. */}
+        {/* Minor ticks — short, subtle, evenly spaced. */}
         <rect
           x={x}
           y={y}
@@ -85,14 +86,13 @@ export function CompassRing() {
           rx={pathRadius}
           fill="none"
           stroke="rgba(255,255,255,0.55)"
-          strokeWidth={bandWidth - 2}
+          strokeWidth={bandWidth * 0.55}
           strokeDasharray={minorDash}
           pathLength={tickPathLength}
-          vectorEffect="non-scaling-stroke"
         />
-        {/* Major ticks at the 8 cardinal/intercardinal slots — slightly
-            wider + fully opaque. Offset by half the major width so the
-            dashes align with the top of the path (the N position). */}
+        {/* Major ticks at the 8 cardinal/intercardinal slots — full band
+            width and fully opaque. Offset half a dash so the first major
+            sits dead-centre on the top edge (the N slot). */}
         <rect
           x={x}
           y={y}
@@ -103,7 +103,7 @@ export function CompassRing() {
           stroke="#ffffff"
           strokeWidth={bandWidth}
           strokeDasharray={majorDash}
-          strokeDashoffset={-0.6}
+          strokeDashoffset={-0.7}
           pathLength={tickPathLength}
         />
       </svg>
