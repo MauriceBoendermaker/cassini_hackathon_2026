@@ -441,6 +441,65 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
   transform-origin: 50% 50%;
 }
 
+/* Compass ring — overlays the EvacuationPage tracing the phone-frame edge
+   with N/E/S/W markers. Rotates as a whole to indicate magnetic north. */
+.compass-ring {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 1.5px dashed oklch(0.62 0.18 240 / 0.32);
+  border-radius: 32px;
+  z-index: 1100;
+  transform-origin: 50% 50%;
+  transition: transform 0.18s ease-out;
+}
+@media (max-width: 520px), (display-mode: standalone), (pointer: coarse) {
+  .compass-ring { border-radius: 0; }
+}
+.compass-mark {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  background: var(--surface);
+  color: var(--brand);
+  border: 1.5px solid var(--brand);
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .08);
+}
+.compass-mark-n {
+  top: 8px; left: 50%; transform: translateX(-50%);
+  background: var(--brand); color: #fff; border-color: transparent;
+}
+.compass-mark-e { top: 50%; right: 8px;  transform: translateY(-50%); }
+.compass-mark-s { bottom: 8px; left: 50%; transform: translateX(-50%); }
+.compass-mark-w { top: 50%; left: 8px;  transform: translateY(-50%); }
+
+/* Small floating button to grant iOS the orientation permission. */
+.compass-enable {
+  position: absolute;
+  top: 60px;
+  right: 14px;
+  z-index: 1110;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 11px;
+  background: var(--brand);
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  font: 600 11px var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .25);
+  cursor: pointer;
+}
+.compass-enable:active { transform: scale(0.97); }
+
 /* Pinned action bar at the bottom of the evacuation page — stays put while
    the step list scrolls above it. */
 .evac-actions {

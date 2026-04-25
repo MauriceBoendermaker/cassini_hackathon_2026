@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import L from "leaflet";
@@ -29,11 +29,14 @@ const ROAD_CLOSURES: [number, number][][] = [
   [[39.458, -0.353], [39.461, -0.348]],
 ];
 
+// Real SAIH-Júcar gauging stations along the active Túria channel.
+// Manises sits on the upstream Túria; the rest trace the Plan Sur ("Cauce Nuevo")
+// new river bed that carries flood waters south of Valencia to the sea.
 const RIVER_SENSORS = [
-  { id: "S1", lat: 39.485, lng: -0.421, level: 2.1, status: "warn" as const },
-  { id: "S2", lat: 39.475, lng: -0.395, level: 3.4, status: "alert" as const },
-  { id: "S3", lat: 39.462, lng: -0.368, level: 1.8, status: "ok" as const },
-  { id: "S4", lat: 39.449, lng: -0.341, level: 1.2, status: "ok" as const },
+  { id: "08089", name: "Manises",         river: "Túria",           lat: 39.4895, lng: -0.4655, level: 2.1, status: "warn"  as const },
+  { id: "08092", name: "Quart de Poblet", river: "Túria · Plan Sur", lat: 39.4720, lng: -0.4380, level: 3.4, status: "alert" as const },
+  { id: "08097", name: "Paiporta",        river: "Túria · Plan Sur", lat: 39.4475, lng: -0.4015, level: 1.8, status: "ok"    as const },
+  { id: "08103", name: "Pinedo",          river: "Túria · mouth",    lat: 39.4230, lng: -0.3290, level: 0.9, status: "ok"    as const },
 ];
 
 // Drought-specific overlays — reuse FLOOD_LAYERS geometry with drought colours
@@ -259,7 +262,10 @@ export function MapPage() {
           iconAnchor: [11, 11],
         });
         const m = L.marker([s.lat, s.lng], { icon: ic }).addTo(map);
-        m.bindTooltip(`${s.id} · ${s.level} m water level`, { direction: "top" });
+        m.bindTooltip(
+          `<b>${s.name}</b> <span style="opacity:.7">#${s.id}</span><br>${s.river} · ${s.level.toFixed(1)} m`,
+          { direction: "top" },
+        );
         sensorLayersRef.current.push(m);
       });
     } else {
@@ -460,6 +466,7 @@ export function MapPage() {
           layers={layers}
           setLayer={setLayer}
           isFlood={isFlood}
+          mapTitle={mapTitle}
           onClose={() => setShowLayers(false)}
         />
       )}
@@ -512,11 +519,13 @@ function LayersPanel({
   layers,
   setLayer,
   isFlood,
+  mapTitle,
   onClose,
 }: {
   layers: LayerState;
   setLayer: <K extends keyof LayerState>(key: K, val: boolean) => void;
   isFlood: boolean;
+  mapTitle: string;
   onClose: () => void;
 }) {
   return (
@@ -556,7 +565,7 @@ function LayersPanel({
             icon={isFlood ? <IconDrop size={18} /> : <IconEye size={18} />}
             iconBg={isFlood ? "oklch(0.55 0.18 230)" : "oklch(0.52 0.14 145)"}
             title={isFlood ? "River sensors" : "Soil moisture sensors"}
-            sub={isFlood ? "Water level gauges · Túria basin" : "In-situ soil moisture · C3S calibrated"}
+            sub={isFlood ? `Water level gauges · ${mapTitle}` : "In-situ soil moisture · C3S calibrated"}
             on={layers.sensors}
             onChange={(v) => setLayer("sensors", v)}
           />
