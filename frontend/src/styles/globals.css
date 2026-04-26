@@ -780,6 +780,11 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
    ============================================================ */
 .fullbleed-stage {
   flex: 1; display: flex; flex-direction: column;
+  /* Without `min-height: 0` a flex column with `flex: 1` defaults to
+   * `min-height: auto`, so it grows to its tallest child instead of
+   * constraining height. That breaks any inner `overflow: auto` scroll
+   * container — the scroll child can't shrink below its content. */
+  min-height: 0;
   color: #fff;
 }
 .fullbleed-stage[data-stage="1"] { background: linear-gradient(180deg, oklch(0.62 0.12 240) 0%, oklch(0.38 0.14 245) 100%); }
