@@ -230,12 +230,25 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
   border-radius: 10px;
   touch-action: manipulation;    /* no double-tap zoom delay on tab taps */
   min-height: 56px;              /* comfortable touch target */
+  transition: background-color .18s ease, color .18s ease;
 }
-.tab-bar button.active { color: var(--brand); }
-[data-theme="dark"] .tab-bar button.active { color: var(--ink); }
+.tab-bar button:hover { background: var(--bg-soft); }
+.tab-bar button.active:hover { background: color-mix(in srgb, var(--brand) 14%, transparent); }
+.tab-bar button.sos.active:hover { background: color-mix(in srgb, var(--s4) 16%, transparent); }
+.tab-bar button.active {
+  color: var(--brand);
+  background: color-mix(in srgb, var(--brand) 10%, transparent);
+}
+[data-theme="dark"] .tab-bar button.active {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 12%, transparent);
+}
 .tab-bar button:active { background: var(--bg-soft); }
 .tab-bar button.sos { color: var(--s4); }
-.tab-bar button.sos.active { color: var(--s4); }
+.tab-bar button.sos.active {
+  color: var(--s4);
+  background: color-mix(in srgb, var(--s4) 12%, transparent);
+}
 
 /* ============================================================
    Generic primitives
