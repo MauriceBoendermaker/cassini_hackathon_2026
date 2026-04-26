@@ -78,7 +78,16 @@ export function AlertPage() {
         <div style={{ width: 38 }} />
       </div>
 
-      <div style={{ flex: 1, padding: "8px 24px 24px", overflowY: "auto" }}>
+      <div
+        style={{
+          flex: 1,
+          minHeight: 0,
+          padding: "8px 24px 24px",
+          overflowY: "auto",
+          overscrollBehaviorY: "contain",
+          WebkitOverflowScrolling: "touch",
+        }}
+      >
         <div
           style={{
             fontSize: 11,
@@ -220,7 +229,7 @@ export function AlertPage() {
         </div>
       </div>
 
-      <div style={{ padding: "12px 18px", display: "flex", gap: 10 }}>
+      <div style={{ padding: "12px 18px", display: "flex", gap: 10, flexShrink: 0 }}>
         <button
           className="btn secondary"
           style={{
