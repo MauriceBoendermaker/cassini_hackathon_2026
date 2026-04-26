@@ -51,7 +51,9 @@ export function PhoneShell() {
         <div className="app-viewport" data-stage={effectiveStage}>
           {!isFullBleed && <StatusBar tone={statusTone} />}
 
-          <Outlet />
+          <div className="page-transition" key={pathname}>
+            <Outlet />
+          </div>
 
           {showTabBar && (
             <TabBar role={isFirefighter ? "firefighter" : "citizen"} tone={tabBarTone} />

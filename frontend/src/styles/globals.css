@@ -119,6 +119,26 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
   flex-direction: column;
 }
 
+/* Page-switch transition — keyed by pathname in <PhoneShell>, so each
+   navigation remounts this wrapper and replays the entry animation.
+   Entry-only (no exit) keeps the swap quiet: old page leaves instantly,
+   new one fades + drifts up a few px. Persistent chrome (status bar, tab
+   bar, overlays) sits outside this wrapper so it stays still. */
+.page-transition {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  animation: pageEnter 220ms cubic-bezier(.22, .61, .36, 1) both;
+}
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-transition { animation: none; }
+}
+
 /* ============================================================
    iOS-style status bar
    ============================================================ */
