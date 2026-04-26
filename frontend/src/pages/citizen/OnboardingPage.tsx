@@ -18,6 +18,7 @@ import {
   IconShield,
 } from "../../components/icons/Icons";
 import { EU_LANGUAGES } from "../../lib/demo";
+import { requestCompassPermission } from "../../lib/useCompass";
 
 export function OnboardingPage() {
   const navigate = useNavigate();
@@ -34,13 +35,20 @@ export function OnboardingPage() {
     if (step === 2 && "Notification" in window && Notification.permission === "default") {
       void Notification.requestPermission();
     }
-    // Step 3 is the camera permission step — trigger getUserMedia so the
-    // browser shows its native prompt, then immediately stop the stream.
-    if (step === 3 && navigator.mediaDevices?.getUserMedia) {
-      void navigator.mediaDevices
-        .getUserMedia({ video: { facingMode: "environment" } })
-        .then((s) => s.getTracks().forEach((t) => t.stop()))
-        .catch(() => {/* denied — silent */});
+    // Step 3 covers the AR overlay — request both camera (getUserMedia) and
+    // iOS Motion & Orientation (DeviceOrientationEvent.requestPermission)
+    // here so the user only sees the in-app "Enable compass" pill if they
+    // explicitly denied it. Both calls must originate from this user gesture.
+    if (step === 3) {
+      // Fire-and-forget the iOS compass prompt before any await so the
+      // gesture-activation token is still valid when Safari evaluates it.
+      void requestCompassPermission();
+      if (navigator.mediaDevices?.getUserMedia) {
+        void navigator.mediaDevices
+          .getUserMedia({ video: { facingMode: "environment" } })
+          .then((s) => s.getTracks().forEach((t) => t.stop()))
+          .catch(() => {/* denied — silent */});
+      }
     }
     if (step < total - 1) setStep(step + 1);
     else {
@@ -234,17 +242,19 @@ function ObCamera() {
         <div style={{ position: "absolute", bottom: 14, left: 14 }}>compass · ar overlay</div>
       </div>
       <div className="eyebrow" style={{ marginTop: 22 }}>Permission · 3 of 3</div>
-      <h1 className="h-title" style={{ marginTop: 8 }}>Allow camera access</h1>
+      <h1 className="h-title" style={{ marginTop: 8 }}>Allow camera & compass</h1>
       <p className="h-sub" style={{ marginTop: 12 }}>
-        Aegis uses your camera only to power the compass overlay — when you point
-        your phone, directions appear on top of the live camera view.
+        Aegis uses your camera for the live AR overlay and your phone's
+        motion sensor for the compass — together they keep you pointed
+        toward the nearest safe point. iOS will ask for both separately.
       </p>
       <div className="card" style={{ marginTop: 18, background: "var(--bg-soft)" }}>
         <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
           <IconInfo size={18} />
           <div style={{ fontSize: 12.5, color: "var(--ink-2)", lineHeight: 1.5 }}>
-            The camera is only active while you're using the compass view. It's
-            never accessed in the background and nothing is recorded or uploaded.
+            Both sensors stay off until you open the directions view, are
+            never accessed in the background, and nothing is recorded or
+            uploaded.
           </div>
         </div>
       </div>
