@@ -48,6 +48,8 @@ type AlertState = {
   /** Real user position from browser geolocation, or null if unknown.
    * When null, pages fall back to the Valencia demo anchor. */
   userPosition: LatLng | null;
+  /** Reported accuracy of the geolocation fix in meters, or null if unknown. */
+  userAccuracy: number | null;
   /** Human-readable place name for the user's position (e.g. "Amsterdam"),
    * or null if reverse geocoding hasn't resolved yet. */
   userPlaceName: string | null;
@@ -90,6 +92,7 @@ export function AlertProvider({ children }: { children: ReactNode }) {
   const [nativeInstallReady, setNativeInstallReady] = useState<boolean>(false);
   const deferredPromptRef = useRef<BeforeInstallPromptEvent | null>(null);
   const [realUserPosition, setRealUserPosition] = useState<LatLng | null>(null);
+  const [realUserAccuracy, setRealUserAccuracy] = useState<number | null>(null);
   const [realUserPlaceName, setRealUserPlaceName] = useState<string | null>(null);
   const [realUserCountry, setRealUserCountry] = useState<string | null>(null);
   const lastStageRef = useRef<StageNum>(1);
@@ -98,7 +101,8 @@ export function AlertProvider({ children }: { children: ReactNode }) {
   const requestLocation = useCallback(async () => {
     const pos = await getCurrentPosition();
     if (!pos) return;
-    setRealUserPosition(pos);
+    setRealUserPosition({ lat: pos.lat, lng: pos.lng });
+    setRealUserAccuracy(pos.accuracy);
     const { label, country } = await reverseGeocode(pos);
     if (label) setRealUserPlaceName(label);
     if (country) setRealUserCountry(country);
@@ -121,6 +125,9 @@ export function AlertProvider({ children }: { children: ReactNode }) {
     () => (scenarioActive ? { lat: VALENCIA.user[0], lng: VALENCIA.user[1] } : realUserPosition),
     [scenarioActive, realUserPosition],
   );
+  // Demo scenario fakes a high-precision Galileo fix; otherwise expose the
+  // real browser-reported accuracy.
+  const userAccuracy = scenarioActive ? 1.2 : realUserAccuracy;
   const userPlaceName = scenarioActive ? "Valencia" : realUserPlaceName;
   const userCountry = scenarioActive ? "ES" : realUserCountry;
 
@@ -243,6 +250,7 @@ export function AlertProvider({ children }: { children: ReactNode }) {
     effectiveStage,
     currentEvent,
     userPosition,
+    userAccuracy,
     userPlaceName,
     userCountry,
     requestLocation,

@@ -11,12 +11,16 @@ import { fmtCoord } from "../../lib/demo";
 // to match the demo device's home position so the SOS HUD still reads as a
 // real fix instead of a 0,0 placeholder.
 const SOS_FALLBACK: [number, number] = [52.21342, 4.42635];
+const SOS_FALLBACK_ACCURACY_M = 1.2;
+
+const fmtAccuracyM = (m: number) =>
+  m < 10 ? `±${m.toFixed(1)} M` : m < 1000 ? `±${Math.round(m)} M` : `±${(m / 1000).toFixed(1)} KM`;
 
 type Phase = "idle" | "holding" | "sending" | "sent";
 
 export function SOSPage() {
   const { online } = useSettings();
-  const { userPosition, activeModule } = useAlert();
+  const { userPosition, userAccuracy, activeModule } = useAlert();
   const isReport = activeModule.sosType === "report";
   const navigate = useNavigate();
   const [phase, setPhase] = useState<Phase>("idle");
@@ -28,16 +32,20 @@ export function SOSPage() {
   const [lat, lng] = userPosition
     ? [userPosition.lat, userPosition.lng]
     : SOS_FALLBACK;
+  const accuracyM = userAccuracy ?? SOS_FALLBACK_ACCURACY_M;
+  const accuracyLabel = fmtAccuracyM(accuracyM);
 
   const start = () => {
     setPhase("holding");
     setHold(0);
+    navigator.vibrate?.(40);
     timerRef.current = window.setInterval(() => {
       setHold((h) => {
         const v = h + 4;
         if (v >= 100) {
           if (timerRef.current) window.clearInterval(timerRef.current);
           setPhase("sending");
+          navigator.vibrate?.([60, 60, 120]);
           window.setTimeout(() => setPhase("sent"), 1400);
           return 100;
         }
@@ -50,6 +58,7 @@ export function SOSPage() {
     if (timerRef.current) window.clearInterval(timerRef.current);
     setPhase((p) => {
       if (p === "sent" || p === "sending") return p;
+      if (p === "holding") navigator.vibrate?.(0);
       return "idle";
     });
     setHold((h) => (phase === "sent" ? h : 0));
@@ -115,8 +124,8 @@ export function SOSPage() {
           }}
         >
           {isReport
-            ? `EGNOS PRECISION · ${online ? "NETWORK" : "OFFLINE"} · ±1.5 M`
-            : `GALILEO ${online ? "NETWORK + SAR" : "SAR · OFFLINE"} · ±1.2 M`
+            ? `EGNOS PRECISION · ${online ? "NETWORK" : "OFFLINE"} · ${accuracyLabel}`
+            : `GALILEO ${online ? "NETWORK + SAR" : "SAR · OFFLINE"} · ${accuracyLabel}`
           }
         </div>
         <h1
@@ -239,7 +248,7 @@ export function SOSPage() {
       >
         <span>LAT {fmtCoord(lat)}</span>
         <span>LNG {fmtCoord(lng)}</span>
-        <span>±1.2 M</span>
+        <span>{accuracyLabel}</span>
       </div>
     </div>
   );
