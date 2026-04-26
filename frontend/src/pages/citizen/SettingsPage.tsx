@@ -217,9 +217,17 @@ export function SettingsPage() {
           </div>
         </div>
 
+        <div style={{ marginTop: 22, display: "flex", justifyContent: "center" }}>
+          <img
+            src="/aegis_qr_code.png"
+            alt="Aegis QR code"
+            width={216}
+            height={216}
+            style={{ display: "block" }}
+          />
+        </div>
         <div
           style={{
-            marginTop: 22,
             padding: "14px 0",
             fontSize: 10.5,
             color: "var(--ink-3)",
