@@ -6,7 +6,7 @@ The CASSINI Hackathon is the European Commission's flagship space hackathon, run
 
 Our team (Maurice Boendermaker, Thijs van Steenbeek, Mathijs de Niet, Mark Salloum and Harika Ireddy) built Aegis as a working prototype that turns raw Copernicus satellite observations into clear, staged alerts citizens can act on — even when terrestrial networks fail.
 
-## About the Project 🛰️
+## About the Project
 
 Aegis is a proof of concept demonstrating how European space infrastructure can be combined into a single, citizen-facing early-warning platform that scales across hazards.
 It directly responds to the rising frequency of climate-driven flood, drought, wildfire, storm and heatwave events across the EU, and to the "Space for Water" call for tools that turn satellite data into actionable civil-protection workflows.
