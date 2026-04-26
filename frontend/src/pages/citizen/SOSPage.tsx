@@ -5,7 +5,12 @@ import { useSettings } from "../../state/SettingsContext";
 import { IconSatellite } from "../../components/icons/Icons";
 import { StatusBar } from "../../components/layout/StatusBar";
 import { IconCheck, IconClose } from "../../components/icons/Icons";
-import { fmtCoord, VALENCIA } from "../../lib/demo";
+import { fmtCoord } from "../../lib/demo";
+
+// Hard-coded fallback used when the user has not granted geolocation. Picked
+// to match the demo device's home position so the SOS HUD still reads as a
+// real fix instead of a 0,0 placeholder.
+const SOS_FALLBACK: [number, number] = [52.21342, 4.42635];
 
 type Phase = "idle" | "holding" | "sending" | "sent";
 
@@ -18,11 +23,11 @@ export function SOSPage() {
   const [hold, setHold] = useState(0);
   const timerRef = useRef<number | null>(null);
 
-  // Show the user's real coords when geolocation is available, fall back
-  // to the Valencia demo anchor otherwise.
+  // Show the user's real coords when geolocation is granted; fall back to a
+  // hard-coded position so the HUD always reads like a real fix.
   const [lat, lng] = userPosition
     ? [userPosition.lat, userPosition.lng]
-    : VALENCIA.user;
+    : SOS_FALLBACK;
 
   const start = () => {
     setPhase("holding");
