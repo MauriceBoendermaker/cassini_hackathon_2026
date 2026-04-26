@@ -4,36 +4,48 @@ import { useAlert } from "../../state/AlertContext";
 import { useSettings } from "../../state/SettingsContext";
 import { IconSatellite } from "../../components/icons/Icons";
 import { StatusBar } from "../../components/layout/StatusBar";
-import { HomeIndicator } from "../../components/layout/HomeIndicator";
 import { IconCheck, IconClose } from "../../components/icons/Icons";
-import { fmtCoord, VALENCIA } from "../../lib/demo";
+import { fmtCoord } from "../../lib/demo";
+
+// Hard-coded fallback used when the user has not granted geolocation. Picked
+// to match the demo device's home position so the SOS HUD still reads as a
+// real fix instead of a 0,0 placeholder.
+const SOS_FALLBACK: [number, number] = [52.21342, 4.42635];
+const SOS_FALLBACK_ACCURACY_M = 1.2;
+
+const fmtAccuracyM = (m: number) =>
+  m < 10 ? `±${m.toFixed(1)} M` : m < 1000 ? `±${Math.round(m)} M` : `±${(m / 1000).toFixed(1)} KM`;
 
 type Phase = "idle" | "holding" | "sending" | "sent";
 
 export function SOSPage() {
   const { online } = useSettings();
-  const { userPosition, activeModule } = useAlert();
+  const { userPosition, userAccuracy, activeModule } = useAlert();
   const isReport = activeModule.sosType === "report";
   const navigate = useNavigate();
   const [phase, setPhase] = useState<Phase>("idle");
   const [hold, setHold] = useState(0);
   const timerRef = useRef<number | null>(null);
 
-  // Show the user's real coords when geolocation is available, fall back
-  // to the Valencia demo anchor otherwise.
+  // Show the user's real coords when geolocation is granted; fall back to a
+  // hard-coded position so the HUD always reads like a real fix.
   const [lat, lng] = userPosition
     ? [userPosition.lat, userPosition.lng]
-    : VALENCIA.user;
+    : SOS_FALLBACK;
+  const accuracyM = userAccuracy ?? SOS_FALLBACK_ACCURACY_M;
+  const accuracyLabel = fmtAccuracyM(accuracyM);
 
   const start = () => {
     setPhase("holding");
     setHold(0);
+    navigator.vibrate?.(40);
     timerRef.current = window.setInterval(() => {
       setHold((h) => {
         const v = h + 4;
         if (v >= 100) {
           if (timerRef.current) window.clearInterval(timerRef.current);
           setPhase("sending");
+          navigator.vibrate?.([60, 60, 120]);
           window.setTimeout(() => setPhase("sent"), 1400);
           return 100;
         }
@@ -46,6 +58,7 @@ export function SOSPage() {
     if (timerRef.current) window.clearInterval(timerRef.current);
     setPhase((p) => {
       if (p === "sent" || p === "sending") return p;
+      if (p === "holding") navigator.vibrate?.(0);
       return "idle";
     });
     setHold((h) => (phase === "sent" ? h : 0));
@@ -111,8 +124,8 @@ export function SOSPage() {
           }}
         >
           {isReport
-            ? `EGNOS PRECISION · ${online ? "NETWORK" : "OFFLINE"} · ±1.5 M`
-            : `GALILEO ${online ? "NETWORK + SAR" : "SAR · OFFLINE"} · ±1.2 M`
+            ? `EGNOS PRECISION · ${online ? "NETWORK" : "OFFLINE"} · ${accuracyLabel}`
+            : `GALILEO ${online ? "NETWORK + SAR" : "SAR · OFFLINE"} · ${accuracyLabel}`
           }
         </div>
         <h1
@@ -235,9 +248,8 @@ export function SOSPage() {
       >
         <span>LAT {fmtCoord(lat)}</span>
         <span>LNG {fmtCoord(lng)}</span>
-        <span>±1.2 M</span>
+        <span>{accuracyLabel}</span>
       </div>
-      <HomeIndicator />
     </div>
   );
 }
@@ -381,7 +393,6 @@ function SosSent({ online, isReport, onHome }: { online: boolean; isReport: bool
           Return to home
         </button>
       </div>
-      <HomeIndicator />
     </div>
   );
 }

@@ -119,6 +119,26 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
   flex-direction: column;
 }
 
+/* Page-switch transition — keyed by pathname in <PhoneShell>, so each
+   navigation remounts this wrapper and replays the entry animation.
+   Entry-only (no exit) keeps the swap quiet: old page leaves instantly,
+   new one fades + drifts up a few px. Persistent chrome (status bar, tab
+   bar, overlays) sits outside this wrapper so it stays still. */
+.page-transition {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  animation: pageEnter 220ms cubic-bezier(.22, .61, .36, 1) both;
+}
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-transition { animation: none; }
+}
+
 /* ============================================================
    iOS-style status bar
    ============================================================ */
@@ -230,12 +250,49 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
   border-radius: 10px;
   touch-action: manipulation;    /* no double-tap zoom delay on tab taps */
   min-height: 56px;              /* comfortable touch target */
+  transition: background-color .18s ease, color .18s ease;
 }
-.tab-bar button.active { color: var(--brand); }
-[data-theme="dark"] .tab-bar button.active { color: var(--ink); }
+.tab-bar button:hover { background: var(--bg-soft); }
+.tab-bar button.active:hover { background: color-mix(in srgb, var(--brand) 14%, transparent); }
+.tab-bar button.sos.active:hover { background: color-mix(in srgb, var(--s4) 16%, transparent); }
+.tab-bar button.active {
+  color: var(--brand);
+  background: color-mix(in srgb, var(--brand) 10%, transparent);
+}
+[data-theme="dark"] .tab-bar button.active {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 12%, transparent);
+}
 .tab-bar button:active { background: var(--bg-soft); }
 .tab-bar button.sos { color: var(--s4); }
-.tab-bar button.sos.active { color: var(--s4); }
+.tab-bar button.sos.active {
+  color: var(--s4);
+  background: color-mix(in srgb, var(--s4) 12%, transparent);
+}
+
+/* SOS-toned tab bar — extends the red emergency stage gradient so the
+ * navbar visually blends with the page instead of butting against it. */
+.tab-bar.on-sos {
+  background: oklch(0.32 0.18 18);
+  border-top-color: rgba(255, 255, 255, 0.10);
+}
+.tab-bar.on-sos button { color: rgba(255, 255, 255, 0.72); }
+.tab-bar.on-sos button:hover { background: rgba(255, 255, 255, 0.08); }
+.tab-bar.on-sos button:active { background: rgba(255, 255, 255, 0.12); }
+.tab-bar.on-sos button.active {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+}
+.tab-bar.on-sos button.active:hover { background: rgba(255, 255, 255, 0.18); }
+.tab-bar.on-sos button.sos { color: rgba(255, 255, 255, 0.72); }
+.tab-bar.on-sos button.sos.active {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+}
+.tab-bar.on-sos button.sos.active:hover { background: rgba(255, 255, 255, 0.22); }
+
+.home-indicator.on-sos { background: oklch(0.32 0.18 18); }
+.home-indicator.on-sos i { background: rgba(255, 255, 255, 0.9); }
 
 /* ============================================================
    Generic primitives

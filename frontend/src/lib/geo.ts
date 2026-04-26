@@ -4,12 +4,18 @@
 // down, callers fall back to the Valencia demo anchor.
 
 export type LatLng = { lat: number; lng: number };
+export type GeoFix = LatLng & { accuracy: number };
 
-export async function getCurrentPosition(): Promise<LatLng | null> {
+export async function getCurrentPosition(): Promise<GeoFix | null> {
   if (typeof navigator === "undefined" || !("geolocation" in navigator)) return null;
   return new Promise((resolve) => {
     navigator.geolocation.getCurrentPosition(
-      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      (pos) =>
+        resolve({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          accuracy: pos.coords.accuracy,
+        }),
       () => resolve(null),
       { timeout: 6000, maximumAge: 60_000, enableHighAccuracy: false },
     );
