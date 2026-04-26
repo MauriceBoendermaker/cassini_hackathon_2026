@@ -1,5 +1,5 @@
 # Aegis — CASSINI Hackathon 2026 Prototype
-(11th CASSINI Hackathon · EU Space for Water, April 2026)
+(11th [CASSINI Hackathon](https://taikai.network/en/cassinihackathons/hackathons/space-for-water/overview) · EU Space for Water, April 2026)
 
 Aegis is a multi-hazard citizen alert and rescue coordination platform built for the **11th CASSINI Hackathon** under the **"EU Space for Water"** challenge theme.
 The CASSINI Hackathon is the European Commission's flagship space hackathon, run across multiple European cities to challenge teams to build solutions powered by EU space programmes — **Copernicus** (Earth observation) and **Galileo** (positioning + Search & Rescue).
