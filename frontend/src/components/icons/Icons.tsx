@@ -276,3 +276,11 @@ export const IconCamera = (p: IP) => (
     <circle cx="12" cy="13" r="4" />
   </Icon>
 );
+
+export const IconBackpack = (p: IP) => (
+  <Icon {...p}>
+    <path d="M9 7V5a3 3 0 016 0v2" />
+    <rect x="5" y="7" width="14" height="14" rx="3" />
+    <path d="M9 14h6" />
+  </Icon>
+);
