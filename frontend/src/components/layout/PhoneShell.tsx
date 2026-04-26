@@ -23,17 +23,21 @@ export function PhoneShell() {
   const { pathname } = useLocation();
 
   const onboarding = pathname === "/welcome" || !hasOnboarded;
-  const isFullBleed =
-    onboarding ||
-    pathname.startsWith("/alert") ||
-    pathname.startsWith("/sos");
+  const onSos = pathname.startsWith("/sos");
+  const onAlert = pathname.startsWith("/alert");
+  const isFullBleed = onboarding || onAlert || onSos;
   const isFirefighter = role === "firefighter" || pathname.startsWith("/ops");
 
-  const statusTone =
-    pathname.startsWith("/alert") || pathname.startsWith("/sos") ? "dark" : "light";
+  const statusTone = onAlert || onSos ? "dark" : "light";
 
-  // Tab bar hidden on full-bleed and (for now) firefighter ops view.
-  const showTabBar = !onboarding && !pathname.startsWith("/alert") && !pathname.startsWith("/sos");
+  // Tab bar hidden on onboarding and the alert push screen. SOS keeps the tab
+  // bar with a red-tinted theme so it blends with the emergency stage.
+  const showTabBar = !onboarding && !onAlert;
+  const tabBarTone: "default" | "sos" = onSos ? "sos" : "default";
+  // SOS routes the home indicator through PhoneShell (below the tab bar)
+  // instead of letting the page render its own at the bottom of the stage.
+  const showHomeIndicator = !onboarding && !onAlert;
+  const homeIndicatorTone: "default" | "sos" = onSos ? "sos" : "default";
 
   // Compass-bezel ring traces the phone-frame edge on pages where heading is
   // useful — the live map and the directions/evacuation page. Adding the
@@ -49,8 +53,10 @@ export function PhoneShell() {
 
           <Outlet />
 
-          {showTabBar && <TabBar role={isFirefighter ? "firefighter" : "citizen"} />}
-          {!isFullBleed && <HomeIndicator />}
+          {showTabBar && (
+            <TabBar role={isFirefighter ? "firefighter" : "citizen"} tone={tabBarTone} />
+          )}
+          {showHomeIndicator && <HomeIndicator tone={homeIndicatorTone} />}
 
           {/* Overlays — anchored inside the phone frame, not the page. */}
           <PushStack />

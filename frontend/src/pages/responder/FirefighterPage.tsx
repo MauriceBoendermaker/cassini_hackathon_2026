@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import L from "leaflet";
 import { useSettings } from "../../state/SettingsContext";
 import { AppBar } from "../../components/layout/AppBar";
 import { Stat } from "../../components/ui/Stat";
 import {
-  IconChevronL,
   IconClose,
   IconMinus,
   IconPhone,
@@ -18,7 +16,6 @@ import { tileLayerConfig } from "../../lib/map";
 
 export function FirefighterPage() {
   const { online } = useSettings();
-  const navigate = useNavigate();
   const mapEl = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const [selected, setSelected] = useState<SOSPin | null>(null);
@@ -120,11 +117,6 @@ export function FirefighterPage() {
       <AppBar
         sub="OPERATIONS · VALENCIA"
         title="Live rescue map"
-        left={
-          <button className="icon-btn" onClick={() => navigate("/")} aria-label="Back">
-            <IconChevronL size={18} />
-          </button>
-        }
       />
       <div className="map-canvas">
         <div ref={mapEl} style={{ position: "absolute", inset: 0 }} />

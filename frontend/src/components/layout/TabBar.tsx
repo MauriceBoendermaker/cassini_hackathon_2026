@@ -33,7 +33,7 @@ function firefighterTabs(): TabItem[] {
   ];
 }
 
-export function TabBar({ role }: { role: Role }) {
+export function TabBar({ role, tone = "default" }: { role: Role; tone?: "default" | "sos" }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const tabs = role === "firefighter" ? firefighterTabs() : citizenTabs();
@@ -44,7 +44,7 @@ export function TabBar({ role }: { role: Role }) {
   };
 
   return (
-    <div className="tab-bar">
+    <div className={"tab-bar" + (tone === "sos" ? " on-sos" : "")}>
       {tabs.map((t) => (
         <button
           key={t.k}

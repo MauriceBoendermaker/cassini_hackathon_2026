@@ -4,7 +4,6 @@ import { useAlert } from "../../state/AlertContext";
 import { useSettings } from "../../state/SettingsContext";
 import { IconSatellite } from "../../components/icons/Icons";
 import { StatusBar } from "../../components/layout/StatusBar";
-import { HomeIndicator } from "../../components/layout/HomeIndicator";
 import { IconCheck, IconClose } from "../../components/icons/Icons";
 import { fmtCoord, VALENCIA } from "../../lib/demo";
 
@@ -237,7 +236,6 @@ export function SOSPage() {
         <span>LNG {fmtCoord(lng)}</span>
         <span>±1.2 M</span>
       </div>
-      <HomeIndicator />
     </div>
   );
 }
@@ -381,7 +379,6 @@ function SosSent({ online, isReport, onHome }: { online: boolean; isReport: bool
           Return to home
         </button>
       </div>
-      <HomeIndicator />
     </div>
   );
 }

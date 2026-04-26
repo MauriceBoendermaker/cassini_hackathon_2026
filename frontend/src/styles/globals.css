@@ -250,6 +250,30 @@ button, [role="button"], a { -webkit-tap-highlight-color: transparent; -webkit-t
   background: color-mix(in srgb, var(--s4) 12%, transparent);
 }
 
+/* SOS-toned tab bar — extends the red emergency stage gradient so the
+ * navbar visually blends with the page instead of butting against it. */
+.tab-bar.on-sos {
+  background: oklch(0.32 0.18 18);
+  border-top-color: rgba(255, 255, 255, 0.10);
+}
+.tab-bar.on-sos button { color: rgba(255, 255, 255, 0.72); }
+.tab-bar.on-sos button:hover { background: rgba(255, 255, 255, 0.08); }
+.tab-bar.on-sos button:active { background: rgba(255, 255, 255, 0.12); }
+.tab-bar.on-sos button.active {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+}
+.tab-bar.on-sos button.active:hover { background: rgba(255, 255, 255, 0.18); }
+.tab-bar.on-sos button.sos { color: rgba(255, 255, 255, 0.72); }
+.tab-bar.on-sos button.sos.active {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+}
+.tab-bar.on-sos button.sos.active:hover { background: rgba(255, 255, 255, 0.22); }
+
+.home-indicator.on-sos { background: oklch(0.32 0.18 18); }
+.home-indicator.on-sos i { background: rgba(255, 255, 255, 0.9); }
+
 /* ============================================================
    Generic primitives
    ============================================================ */
