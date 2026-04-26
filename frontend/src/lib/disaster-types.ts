@@ -8,6 +8,7 @@ import {
   IconEye,
   IconSatellite,
   IconShield,
+  IconBackpack,
 } from "../components/icons/Icons";
 
 type IconProps = { size?: number };
@@ -126,9 +127,11 @@ export const FLOOD_MODULE: DisasterModule = {
     },
   ],
   guidance: [
-    { Icon: IconRoute, title: "Move to higher ground",        sub: "420 m to assembly point B" },
-    { Icon: IconHand,  title: "Avoid basements & underpasses", sub: "Water can rise within minutes" },
-    { Icon: IconPhone, title: "Keep phone charged",            sub: "Galileo SOS works without signal" },
+    { Icon: IconBackpack, title: "Grab a go-bag",                 sub: "ID, meds, water, charger, torch" },
+    { Icon: IconShield,   title: "Pack documents & cash",         sub: "Passport, insurance, small bills" },
+    { Icon: IconRoute,    title: "Move to higher ground",         sub: "420 m to assembly point B" },
+    { Icon: IconHand,     title: "Avoid basements & underpasses", sub: "Water can rise within minutes" },
+    { Icon: IconPhone,    title: "Keep phone charged",            sub: "Galileo SOS works without signal" },
   ],
   sosType: "rescue",
   evacuationType: "route",
